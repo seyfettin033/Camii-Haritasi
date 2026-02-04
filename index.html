@@ -2,73 +2,67 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Türkiye Cami Rehberi - Navigasyon</title>
+<title>Türkiye Cami Rehberi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-:root { --ana-yesil: #14532d; --altin: #fbbf24; --arka-plan: #052c14; }
-html, body { height:100%; margin:0; font-family: 'Segoe UI', sans-serif; background: var(--arka-plan); color: #fff; overflow: hidden; }
-header { background: linear-gradient(135deg, var(--ana-yesil), var(--arka-plan)); padding: 10px; text-align: center; border-bottom: 2px solid var(--altin); }
-.logo { font-size: 24px; display: block; filter: drop-shadow(0 0 5px var(--altin)); }
-header h1 { margin: 2px 0 0; font-size: 16px; color: var(--altin); }
-
-/* ARAMA ÇUBUĞU VE KONTROLLER */
-.controls { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3); }
-select, input { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid var(--altin); font-size: 14px; box-sizing: border-box; }
-.near-btn { background: var(--altin); color: var(--arka-plan); border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-
-#map { height: calc(100vh - 260px); width: 100%; }
-.nav-btn { display: block; background: #2563eb; color: white !important; padding: 10px; margin-top: 5px; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; }
-footer { position: fixed; bottom: 0; width: 100%; background: #000; padding: 5px; font-size: 10px; text-align: center; }
+:root { --yesil: #14532d; --altin: #fbbf24; }
+body { margin:0; font-family: sans-serif; background:#052c14; color:#fff; }
+header { background: var(--yesil); padding:10px; text-align:center; border-bottom:2px solid var(--altin); }
+.controls { padding:10px; display:flex; flex-direction:column; gap:10px; }
+input, select { padding:12px; border-radius:20px; border:1px solid var(--altin); width:100%; box-sizing:border-box; }
+.btn { background: var(--altin); color:#000; padding:12px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; }
+#map { height: calc(100vh - 280px); width:100%; }
+.nav-btn { display:block; background:#2563eb; color:#fff; padding:10px; text-align:center; text-decoration:none; border-radius:5px; margin-top:5px; }
 </style>
 </head>
 <body>
-<header><span class="logo">🕌</span><h1>Türkiye Cami Rehberi</h1></header>
+<header><h1>🕌 Cami Rehberi</h1></header>
 <div class="controls">
-    <select id="il"><option value="">Şehir Seçin...</option></select>
-    <input type="text" id="searchInput" placeholder="🔍 Cami ismine göre ara..." onkeyup="filterMarkers()">
-    <button class="near-btn" onclick="findNearest()">📍 En Yakın Camiyi Bul</button>
+    <select id="ilSelect"><option value="">İl Seçiniz...</option></select>
+    <input type="text" id="ara" placeholder="🔍 Cami ismi ara..." onkeyup="aramaYap()">
+    <button class="btn" onclick="enYakiniBul()">📍 En Yakın Camiyi Bul</button>
 </div>
 <div id="map"></div>
-<footer>Eksik cami mi var? <a href="https://www.openstreetmap.org/edit" target="_blank" style="color:var(--altin)">Düzelt</a></footer>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const iller = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
-const ilSelect = document.getElementById("il");
-iller.sort((a,b)=>a.localeCompare('tr')).forEach(il=>{let o=document.createElement("option");o.value=il;o.text=il;ilSelect.add(o);});
+const s = document.getElementById("ilSelect");
+iller.sort().forEach(i => { let o = document.createElement("option"); o.value=i; o.text=i; s.add(o); });
 
 const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let markers = [], userLocation = null;
+let markers = [], myLoc = null;
 
-map.locate({setView: false, maxZoom: 16});
-map.on('locationfound', e => { userLocation = e.latlng; L.circle(e.latlng, {radius:100}).addTo(map).bindPopup("Siz Buradasınız"); });
+map.locate({setView: false});
+map.on('locationfound', e => { myLoc = e.latlng; L.marker(e.latlng).addTo(map).bindPopup("Buradasınız"); });
 
-function fetchData() {
-    const il = ilSelect.value; if(!il) return;
-    markers.forEach(m => map.removeLayer(m)); markers = [];
-    const query = `[out:json][timeout:25];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
-    fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:query }).then(r=>r.json()).then(data=>{
-        data.elements.forEach(el=>{
-            const lat=el.lat||el.center.lat, lon=el.lon||el.center.lon, name=el.tags.name||"İsimsiz Cami";
-            const m = L.circleMarker([lat, lon], {radius: 8, color: "#14532d", fillColor: "#fbbf24", fillOpacity: 0.9})
-            .bindPopup(`<strong>${name}</strong><br><a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi</a>`);
-            m.name = name.toLowerCase(); markers.push(m); m.addTo(map);
+s.onchange = function() {
+    if(!this.value) return;
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    const q = `[out:json][timeout:25];area["name"="${this.value}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
+    fetch("https://overpass-api.de/api/interpreter", {method:"POST", body:q}).then(res=>res.json()).then(data=>{
+        data.elements.forEach(el => {
+            const lat = el.lat || el.center.lat, lon = el.lon || el.center.lon, is = el.tags.name || "İsimsiz Cami";
+            const m = L.circleMarker([lat, lon], {radius:8, color:'#14532d', fillColor:'#fbbf24', fillOpacity:0.9})
+            .bindPopup(`<b>${is}</b><a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi</a>`);
+            m.is = is.toLowerCase(); markers.push(m); m.addTo(map);
         });
-        if(markers.length>0) map.fitBounds(L.featureGroup(markers).getBounds());
+        if(markers.length) map.fitBounds(L.featureGroup(markers).getBounds());
     });
+};
+
+function aramaYap() {
+    const v = document.getElementById("ara").value.toLowerCase();
+    markers.forEach(m => { if(m.is.includes(v)) m.addTo(map); else map.removeLayer(m); });
 }
-function filterMarkers() {
-    const s = document.getElementById("searchInput").value.toLowerCase();
-    markers.forEach(m => { if(m.name.includes(s)) m.addTo(map); else map.removeLayer(m); });
+
+function enYakiniBul() {
+    if(!myLoc || !markers.length) return alert("Konum veya veri yok!");
+    let n = markers.reduce((p, c) => myLoc.distanceTo(c.getLatLng()) < myLoc.distanceTo(p.getLatLng()) ? c : p);
+    map.setView(n.getLatLng(), 16); n.openPopup();
 }
-function findNearest() {
-    if(!userLocation || markers.length===0) return alert("Konum alınamadı veya şehir seçilmedi!");
-    let nearest = markers.reduce((prev, curr) => userLocation.distanceTo(curr.getLatLng()) < userLocation.distanceTo(prev.getLatLng()) ? curr : prev);
-    map.setView(nearest.getLatLng(), 17); nearest.openPopup();
-}
-ilSelect.onchange = fetchData;
 </script>
 </body>
 </html>
