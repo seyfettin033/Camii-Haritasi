@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cami Haritası</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 80vh; width: 100%; }
+        #vakitler { height: 20vh; background: #f4f4f4; padding: 10px; text-align: center; font-family: sans-serif; }
+        .vakit-kutu { display: inline-block; margin: 10px; padding: 10px; background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div id="vakitler">
+    <h2 id="sehir-adi">Şehir Seçiliyor...</h2>
+    <div id="vakit-listesi">Vakitler yükleniyor...</div>
+</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    // 1. Haritayı Mersin/Hatay merkezli başlat
+    var map = L.map('map').setView([36.8, 34.6], 10); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // 2. Namaz Vakitlerini Getiren Fonksiyon (Örnek API kullanımı)
+    function vakitleriGetir(sehir) {
+        document.getElementById('sehir-adi').innerText = sehir.toUpperCase();
+        // Buraya ezanvakti.herokuapp.com veya benzeri bir API bağlanacak
+        document.getElementById('vakit-listesi').innerHTML = `
+            <div class="vakit-kutu">İmsak: 05:42</div>
+            <div class="vakit-kutu">Öğle: 12:55</div>
+            <div class="vakit-kutu">İkindi: 15:38</div>
+            <div class="vakit-kutu">Akşam: 18:12</div>
+            <div class="vakit-kutu">Yatsı: 19:35</div>
+        `;
+    }
+
+    // 3. Harita Hareket Ettikçe Şehri Algıla (Temsili)
+    map.on('moveend', function() {
+        // Haritanın ortasındaki koordinata göre şehir tahmini yapıp vakitleri güncelleyebilirsin
+        vakitleriGetir("Mersin / Hatay Bölgesi");
+    });
+
+    vakitleriGetir("Mersin"); // Başlangıçta Mersin gelsin
+</script>
+</body>
+</html>
