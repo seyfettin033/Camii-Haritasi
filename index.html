@@ -3,30 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cami Rehberi - Navigasyon</title>
+    <title>Türkiye Cami Rehberi - Navigasyon</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        :root { --yesil: #064e3b; --altin: #fbbf24; }
-        body { margin: 0; font-family: sans-serif; background: #022c22; color: white; }
-        .pnl { padding: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--yesil); border-bottom: 2px solid var(--altin); }
-        select, input, .btn { padding: 12px; border-radius: 10px; border: 1px solid var(--altin); font-size: 15px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--altin); color: black; font-weight: bold; cursor: pointer; border: none; }
-        #map { height: calc(100vh - 280px); width: 100%; }
-        .nav-link { display: block; background: #2563eb; color: white; padding: 10px; text-align: center; text-decoration: none; border-radius: 5px; margin-top: 10px; font-weight: bold; }
+        :root { --yesil: #064e3b; --altin: #fbbf24; --beyaz: #ffffff; --kirmizi: #e30a17; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #022c22; color: white; overflow: hidden; }
+        
+        /* Bayraklı Üst Panel */
+        .header { 
+            background: linear-gradient(to bottom, var(--yesil), #022c22); 
+            padding: 15px; 
+            text-align: center; 
+            border-bottom: 3px solid var(--altin);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .flag-row { display: flex; align-items: center; gap: 10px; font-size: 24px; }
+        .turk-bayragi { width: 40px; height: auto; border-radius: 3px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        
+        /* Kontrol Paneli */
+        .pnl { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.05); }
+        select, input, .btn { padding: 12px; border-radius: 12px; border: 1px solid var(--altin); font-size: 15px; width: 100%; box-sizing: border-box; outline: none; }
+        input { background: white; color: black; }
+        .btn { background: var(--altin); color: black; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
+        .btn:active { transform: scale(0.98); }
+        
+        #map { height: calc(100vh - 310px); width: 100%; }
+        
+        /* Navigasyon Butonu */
+        .nav-link { display: block; background: #2563eb; color: white !important; padding: 12px; text-align: center; text-decoration: none; border-radius: 8px; margin-top: 10px; font-weight: bold; }
+        footer { position: fixed; bottom: 0; width: 100%; background: black; padding: 8px; text-align: center; font-size: 11px; color: #888; }
     </style>
 </head>
 <body>
 
+<div class="header">
+    <div class="flag-row">
+        <span>🕌</span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" class="turk-bayragi" alt="TR">
+        <span>🕌</span>
+    </div>
+    <h1 style="margin:0; font-size: 18px; color: var(--altin);">TÜRKİYE CAMİ REHBERİ</h1>
+</div>
+
 <div class="pnl">
-    <h3 style="margin:0; text-align:center; color:var(--altin);">🕌 Cami Rehberi</h3>
     <select id="ilSec">
-        <option value="">İl Seçiniz...</option>
+        <option value="">Lütfen Bir Şehir Seçin...</option>
     </select>
-    <input type="text" id="aramaKutusu" placeholder="🔍 Cami ismi ile ara..." onkeyup="filtrele()">
-    <button class="btn" onclick="enYakiniBul()">📍 En Yakın Camiyi Bul</button>
+    <input type="text" id="aramaKutusu" placeholder="🔍 Cami ismi ara (Örn: Ulu Cami)" onkeyup="filtrele()">
+    <button class="btn" onclick="enYakiniBul()">📍 KONUMUMA EN YAKIN CAMİYİ BUL</button>
 </div>
 
 <div id="map"></div>
+
+<footer>
+    © 2026 Türkiye Cami Veri Tabanı - Navigasyon Sistemi
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -42,23 +76,20 @@
     let markers = [];
     let cihazKonum = null;
 
-    // Cihaz konumunu al
     map.locate({setView: false});
     map.on('locationfound', e => {
         cihazKonum = e.latlng;
-        L.circle(e.latlng, {radius: 50, color: 'blue'}).addTo(map).bindPopup("Buradasınız");
+        L.marker(e.latlng).addTo(map).bindPopup("<b>Buradasınız</b>").openPopup();
     });
 
     ilSec.onchange = function() {
         const il = this.value;
         if(!il) return;
 
-        // Eskileri temizle
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
-        // Veri Çekme Sorgusu (Garantili Yöntem)
-        const sorgu = `[out:json][timeout:30];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
+        const sorgu = `[out:json][timeout:60];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
         
         fetch("https://overpass-api.de/api/interpreter", {method: "POST", body: sorgu})
         .then(res => res.json())
@@ -69,10 +100,12 @@
                 const isim = el.tags.name || "İsimsiz Cami";
 
                 const m = L.circleMarker([lat, lon], {
-                    radius: 8, color: '#064e3b', fillColor: '#fbbf24', fillOpacity: 1
+                    radius: 9, color: '#064e3b', fillColor: '#fbbf24', fillOpacity: 1
                 }).bindPopup(`
-                    <b style="color:black">${isim}</b><br>
-                    <a class="nav-link" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi Al</a>
+                    <div style="color:black; text-align:center;">
+                        <strong style="font-size:14px;">${isim}</strong><br>
+                        <a class="nav-link" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 YOL TARİFİ AL</a>
+                    </div>
                 `);
                 m.camiAdi = isim.toLowerCase();
                 markers.push(m);
@@ -80,7 +113,7 @@
             });
             if(markers.length > 0) map.fitBounds(L.featureGroup(markers).getBounds());
         })
-        .catch(err => alert("Veri çekilirken hata oluştu, lütfen tekrar deneyin."));
+        .catch(err => alert("Bağlantı hatası! Lütfen şehri tekrar seçin."));
     };
 
     function filtrele() {
@@ -92,18 +125,15 @@
     }
 
     function enYakiniBul() {
-        if(!cihazKonum) return alert("Konumunuz henüz belirlenmedi. Lütfen izin verin.");
-        if(markers.length === 0) return alert("Lütfen önce bir il seçin.");
+        if(!cihazKonum) { alert("Konumunuz alınamadı. Lütfen GPS/Konum izni verin."); return; }
+        if(markers.length === 0) { alert("Lütfen önce bir şehir seçin."); return; }
 
         let enYakin = markers[0];
         let enKisaMesafe = cihazKonum.distanceTo(markers[0].getLatLng());
 
         markers.forEach(m => {
             let d = cihazKonum.distanceTo(m.getLatLng());
-            if(d < enKisaMesafe) {
-                enKisaMesafe = d;
-                enYakin = m;
-            }
+            if(d < enKisaMesafe) { enKisaMesafe = d; enYakin = m; }
         });
 
         map.setView(enYakin.getLatLng(), 17);
