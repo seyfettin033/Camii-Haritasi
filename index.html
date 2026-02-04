@@ -2,212 +2,217 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Türkiye Camii Rehberi - Dijital Hayır Arşivi</title>
+<title>Türkiye Cami Rehberi - Navigasyon</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <style>
 :root {
     --ana-yesil: #14532d;
-    --neon-altin: #fbbf24;
-    --derin-arka-plan: #061f10;
+    --altin: #fbbf24;
+    --arka-plan: #052c14;
 }
 
-html, body { height:100%; margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--derin-arka-plan); color:#fff; overflow-x: hidden; }
+html, body { height:100%; margin:0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--arka-plan); color: #fff; overflow: hidden; }
 
-/* Seccade Deseni Arka Planı */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png'); /* İnce motif */
-    opacity: 0.1;
-    z-index: -1;
-}
-
+/* Üst Panel */
 header { 
-  background: linear-gradient(135deg, #14532d 0%, #052c14 100%); 
-  padding:20px; 
-  border-bottom: 2px solid var(--neon-altin);
-  text-align: center;
+    background: linear-gradient(135deg, var(--ana-yesil), var(--arka-plan)); 
+    padding: 15px; 
+    text-align: center;
+    border-bottom: 2px solid var(--altin);
 }
+.logo { font-size: 30px; display: block; filter: drop-shadow(0 0 5px var(--altin)); }
+header h1 { margin: 5px 0 0; font-size: 20px; color: var(--altin); }
 
-/* Neon Camii Simgesi */
-.neon-camii {
-    font-size: 40px;
-    filter: drop-shadow(0 0 5px var(--neon-altin));
-    margin-bottom: 10px;
-    display: block;
-}
-
-header h1 { margin:0; font-size:22px; color: var(--neon-altin); letter-spacing: 1px; text-transform: uppercase; }
-
-.mission-box {
-  background: rgba(20, 83, 45, 0.8);
-  padding: 15px;
-  font-size: 13px;
-  text-align: center;
-  border-bottom: 1px solid rgba(251, 191, 36, 0.3);
-}
-
+/* Arama ve Kontrol Alanı */
 .controls {
-    padding: 15px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: rgba(0,0,0,0.2);
 }
-
-.search-row { display: flex; gap: 10px; }
-input, select { 
-    flex-grow: 1; 
-    padding:12px; 
-    border-radius:8px; 
-    border:1px solid var(--ana-yesil); 
-    background: #fff;
-    color: #333;
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
+input#searchInput {
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    border-radius: 25px;
+    border: 1px solid var(--altin);
+    font-size: 15px;
+    outline: none;
+}
+.search-icon { position: absolute; right: 15px; color: #666; }
 
-.action-bar { display: flex; justify-content: space-between; padding: 5px 15px; }
-.excel-btn { 
-    background: #166534; 
-    color: white; 
-    border: 1px solid var(--neon-altin); 
-    padding: 8px 15px; 
-    border-radius: 20px; 
-    font-size: 12px; 
+/* En Yakın Cami Butonu */
+.near-btn {
+    background: var(--altin);
+    color: var(--arka-plan);
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-weight: bold;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.3s;
 }
+.near-btn:active { transform: scale(0.95); }
 
-#map { height: calc(100vh - 350px); width: 100%; border-top: 2px solid var(--neon-altin); }
+/* Harita */
+#map { height: calc(100vh - 300px); width: 100%; }
 
-/* Popup Tasarımı */
-.popup-container { color: #333; min-width: 200px; }
-.btn { display:block; text-align:center; padding:10px; margin-top:6px; border-radius:6px; text-decoration:none; font-weight:600; color:#fff; font-size:12px; }
-.google { background:#ea4335; }
-.yandex { background:#fc0; color:#000; }
-.navigasyon { background:#3b82f6; } /* Mavi Yol Tarifi Butonu */
-.osm { background:#14532d; border: 1px solid var(--neon-altin); margin-top: 10px; }
+/* Alt Bilgi */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+    padding: 10px;
+    font-size: 12px;
+    text-align: center;
+    color: #aaa;
+}
+footer a { color: var(--altin); text-decoration: none; }
+
+/* Popup */
+.nav-btn {
+    display: block;
+    background: #2563eb;
+    color: white !important;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
 
 <header>
-  <span class="neon-camii">🕌</span>
-  <h1>Türkiye Camii Rehberi</h1>
-  <small style="color:var(--neon-altin); opacity: 0.8;">Açık Veri Gönüllü Hareketi</small>
+    <span class="logo">🕌</span>
+    <h1>Türkiye Cami Rehberi</h1>
 </header>
 
-<div class="mission-box">
-  <strong>Haritayı Birlikte Güçlendirelim</strong>
-  İsimsiz camileri doğrulayarak hayra vesile olun.
-</div>
-
 <div class="controls">
-  <div class="search-row">
-    <select id="il">
-      <option value="">İl Seçiniz...</option>
+    <select id="il" style="padding:10px; border-radius:10px; border:1px solid var(--altin);">
+        <option value="">Önce Şehir Seçin...</option>
     </select>
-    <input type="text" id="filterInput" placeholder="Cami veya İlçe Ara..." onkeyup="filterMarkers()">
-  </div>
-  <div class="action-bar">
-    <span id="sayac">Bir il seçin...</span>
-    <button class="excel-btn" onclick="exportToExcel()">📊 Excel Olarak İndir</button>
-  </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Cami ismine göre ara..." onkeyup="filterMarkers()">
+        <span class="search-icon">🔍</span>
+    </div>
+
+    <button class="near-btn" onclick="findNearest()">
+        📍 Konumuma En Yakın Camiyi Bul
+    </button>
 </div>
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<footer>
+    ⚠️ Eksik cami mi var? <a href="https://www.openstreetmap.org/edit" target="_blank">Haritayı Güncelle</a>
+</footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Mevcut verilerin ve harita yapın korunuyor
-const illerPlaka = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
+const iller = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
 
 const ilSelect = document.getElementById("il");
-illerPlaka.sort().forEach((il) => { // Alfabetik sıralama ekledim
-  const o = document.createElement("option");
-  o.value = il;
-  o.textContent = il;
-  ilSelect.appendChild(o);
+iller.sort((a,b) => a.localeCompare('tr')).forEach(il => {
+    let opt = document.createElement("option");
+    opt.value = il; opt.text = il;
+    ilSelect.add(opt);
 });
 
-const map = L.map('map').setView([39,35], 6);
+const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-const layer = L.layerGroup().addTo(map);
-let allMarkers = []; // Arama için verileri tutacağız
-let currentData = []; // Excel için
+let markers = [];
+let userLocation = null;
+
+// Konum Al
+map.locate({setView: false, maxZoom: 16});
+map.on('locationfound', e => {
+    userLocation = e.latlng;
+    L.marker(e.latlng).addTo(map).bindPopup("Buradasınız").openPopup();
+});
 
 function fetchData() {
-  const il = ilSelect.value;
-  if (!il) return;
-  layer.clearLayers();
-  allMarkers = [];
-  document.getElementById("sayac").innerText = "Veriler çekiliyor...";
+    const il = ilSelect.value;
+    if(!il) return;
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
 
-  const query = `[out:json][timeout:50];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a););out center;`;
+    const query = `[out:json][timeout:25];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
 
-  fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:query })
-  .then(r=>r.json())
-  .then(data=>{
-    currentData = data.elements;
-    document.getElementById("sayac").innerHTML = `<b>${data.elements.length}</b> İsimsiz Cami`;
-    
-    data.elements.forEach(el => {
-      const lat = el.lat || el.center.lat;
-      const lon = el.lon || el.center.lon;
+    fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:query })
+    .then(r => r.json())
+    .then(data => {
+        data.elements.forEach(el => {
+            const lat = el.lat || el.center.lat;
+            const lon = el.lon || el.center.lon;
+            const name = el.tags.name || "İsimsiz Cami";
 
-      const popupHtml = `
-      <div class="popup-container">
-        <strong>📍 İsimsiz Cami</strong><br>
-        <small>${lat}, ${lon}</small>
-        <a class="btn google" target="_blank" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google Haritalar</a>
-        <a class="btn navigasyon" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚙 Yol Tarifi Al</a>
-        <a class="btn yandex" target="_blank" href="https://yandex.com.tr/harita/?ll=${lon}%2C${lat}&z=19&l=stv%2Csta">🚗 Sokak Görünümü</a>
-        <a class="btn osm" target="_blank" href="https://www.openstreetmap.org/edit?editor=id#map=19/${lat}/${lon}">✍️ İsim Ekle</a>
-      </div>`;
-
-      const marker = L.circleMarker([lat,lon], {
-        radius:9, color:"#fbbf24", weight:2, fillColor:"#22c55e", fillOpacity:0.9
-      }).bindPopup(popupHtml);
-      
-      marker.addTo(layer);
-      allMarkers.push({marker, info: el});
+            const m = L.circleMarker([lat, lon], {
+                radius: 8, color: "#14532d", fillColor: "#fbbf24", fillOpacity: 0.9
+            }).bindPopup(`
+                <strong>${name}</strong><br>
+                <a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi</a>
+            `);
+            m.name = name.toLowerCase();
+            m.addTo(map);
+            markers.push(m);
+        });
+        if(markers.length > 0) map.fitBounds(L.featureGroup(markers).getBounds());
     });
-    if(allMarkers.length > 0) map.fitBounds(L.featureGroup(allMarkers.map(m => m.marker)).getBounds());
-  });
 }
 
-// Yeni Özellik: Arama/Filtreleme
+// Arama Filtreleme
 function filterMarkers() {
-    const val = document.getElementById("filterInput").value.toLowerCase();
-    allMarkers.forEach(item => {
-        // Overpass verisinde isim olmadığı için koordinat veya ID bazlı arama yapılabilir
-        // Eğer isim olsaydı item.info.tags.name üzerinden arama yapacaktık
-        if (item.info.id.toString().includes(val)) {
-            item.marker.addTo(layer);
-        } else {
-            layer.removeLayer(item.marker);
+    const searchVal = document.getElementById("searchInput").value.toLowerCase();
+    markers.forEach(m => {
+        if(m.name.includes(searchVal)) m.addTo(map);
+        else map.removeLayer(m);
+    });
+}
+
+// En Yakın Camiyi Bul
+function findNearest() {
+    if (!userLocation) {
+        alert("Konumunuz henüz alınamadı. Lütfen tarayıcıdan konum izni verin.");
+        return;
+    }
+    if (markers.length === 0) {
+        alert("Önce bir şehir seçmelisiniz.");
+        return;
+    }
+
+    let nearest = null;
+    let minDist = Infinity;
+
+    markers.forEach(m => {
+        const dist = userLocation.distanceTo(m.getLatLng());
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = m;
         }
     });
+
+    if (nearest) {
+        map.setView(nearest.getLatLng(), 17);
+        nearest.openPopup();
+    }
 }
 
-// Yeni Özellik: Excel Dışa Aktarma
-function exportToExcel() {
-    if (currentData.length === 0) return alert("Önce bir il seçin!");
-    const worksheet = XLSX.utils.json_to_sheet(currentData.map(el => ({
-        ID: el.id,
-        Enlem: el.lat || el.center.lat,
-        Boylam: el.lon || el.center.lon,
-        Tip: el.type
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Camiler");
-    XLSX.writeFile(workbook, `${ilSelect.value}_isimsiz_camiler.xlsx`);
-}
-
-ilSelect.addEventListener("change", fetchData);
+ilSelect.onchange = fetchData;
 </script>
 </body>
 </html>
