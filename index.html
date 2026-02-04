@@ -6,212 +6,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-:root {
-    --ana-yesil: #14532d;
-    --altin: #fbbf24;
-    --arka-plan: #052c14;
-}
+:root { --ana-yesil: #14532d; --altin: #fbbf24; --arka-plan: #052c14; }
+html, body { height:100%; margin:0; font-family: 'Segoe UI', sans-serif; background: var(--arka-plan); color: #fff; overflow: hidden; }
+header { background: linear-gradient(135deg, var(--ana-yesil), var(--arka-plan)); padding: 10px; text-align: center; border-bottom: 2px solid var(--altin); }
+.logo { font-size: 24px; display: block; filter: drop-shadow(0 0 5px var(--altin)); }
+header h1 { margin: 2px 0 0; font-size: 16px; color: var(--altin); }
 
-html, body { height:100%; margin:0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--arka-plan); color: #fff; overflow: hidden; }
+/* ARAMA ÇUBUĞU VE KONTROLLER */
+.controls { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3); }
+select, input { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid var(--altin); font-size: 14px; box-sizing: border-box; }
+.near-btn { background: var(--altin); color: var(--arka-plan); border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-/* Üst Panel */
-header { 
-    background: linear-gradient(135deg, var(--ana-yesil), var(--arka-plan)); 
-    padding: 15px; 
-    text-align: center;
-    border-bottom: 2px solid var(--altin);
-}
-.logo { font-size: 30px; display: block; filter: drop-shadow(0 0 5px var(--altin)); }
-header h1 { margin: 5px 0 0; font-size: 20px; color: var(--altin); }
-
-/* Arama ve Kontrol Alanı */
-.controls {
-    padding: 12px;
-    background: rgba(255,255,255,0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-input#searchInput {
-    width: 100%;
-    padding: 12px 40px 12px 12px;
-    border-radius: 25px;
-    border: 1px solid var(--altin);
-    font-size: 15px;
-    outline: none;
-}
-.search-icon { position: absolute; right: 15px; color: #666; }
-
-/* En Yakın Cami Butonu */
-.near-btn {
-    background: var(--altin);
-    color: var(--arka-plan);
-    border: none;
-    padding: 12px;
-    border-radius: 25px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: 0.3s;
-}
-.near-btn:active { transform: scale(0.95); }
-
-/* Harita */
-#map { height: calc(100vh - 300px); width: 100%; }
-
-/* Alt Bilgi */
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: rgba(0,0,0,0.9);
-    padding: 10px;
-    font-size: 12px;
-    text-align: center;
-    color: #aaa;
-}
-footer a { color: var(--altin); text-decoration: none; }
-
-/* Popup */
-.nav-btn {
-    display: block;
-    background: #2563eb;
-    color: white !important;
-    padding: 10px;
-    margin-top: 8px;
-    border-radius: 5px;
-    text-decoration: none;
-    text-align: center;
-    font-weight: bold;
-}
+#map { height: calc(100vh - 260px); width: 100%; }
+.nav-btn { display: block; background: #2563eb; color: white !important; padding: 10px; margin-top: 5px; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; }
+footer { position: fixed; bottom: 0; width: 100%; background: #000; padding: 5px; font-size: 10px; text-align: center; }
 </style>
 </head>
 <body>
-
-<header>
-    <span class="logo">🕌</span>
-    <h1>Türkiye Cami Rehberi</h1>
-</header>
-
+<header><span class="logo">🕌</span><h1>Türkiye Cami Rehberi</h1></header>
 <div class="controls">
-    <select id="il" style="padding:10px; border-radius:10px; border:1px solid var(--altin);">
-        <option value="">Önce Şehir Seçin...</option>
-    </select>
-
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Cami ismine göre ara..." onkeyup="filterMarkers()">
-        <span class="search-icon">🔍</span>
-    </div>
-
-    <button class="near-btn" onclick="findNearest()">
-        📍 Konumuma En Yakın Camiyi Bul
-    </button>
+    <select id="il"><option value="">Şehir Seçin...</option></select>
+    <input type="text" id="searchInput" placeholder="🔍 Cami ismine göre ara..." onkeyup="filterMarkers()">
+    <button class="near-btn" onclick="findNearest()">📍 En Yakın Camiyi Bul</button>
 </div>
-
 <div id="map"></div>
-
-<footer>
-    ⚠️ Eksik cami mi var? <a href="https://www.openstreetmap.org/edit" target="_blank">Haritayı Güncelle</a>
-</footer>
+<footer>Eksik cami mi var? <a href="https://www.openstreetmap.org/edit" target="_blank" style="color:var(--altin)">Düzelt</a></footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const iller = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
-
 const ilSelect = document.getElementById("il");
-iller.sort((a,b) => a.localeCompare('tr')).forEach(il => {
-    let opt = document.createElement("option");
-    opt.value = il; opt.text = il;
-    ilSelect.add(opt);
-});
+iller.sort((a,b)=>a.localeCompare('tr')).forEach(il=>{let o=document.createElement("option");o.value=il;o.text=il;ilSelect.add(o);});
 
 const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let markers = [];
-let userLocation = null;
+let markers = [], userLocation = null;
 
-// Konum Al
 map.locate({setView: false, maxZoom: 16});
-map.on('locationfound', e => {
-    userLocation = e.latlng;
-    L.marker(e.latlng).addTo(map).bindPopup("Buradasınız").openPopup();
-});
+map.on('locationfound', e => { userLocation = e.latlng; L.circle(e.latlng, {radius:100}).addTo(map).bindPopup("Siz Buradasınız"); });
 
 function fetchData() {
-    const il = ilSelect.value;
-    if(!il) return;
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-
+    const il = ilSelect.value; if(!il) return;
+    markers.forEach(m => map.removeLayer(m)); markers = [];
     const query = `[out:json][timeout:25];area["name"="${il}"]["admin_level"="4"]->.a;(node["amenity"="place_of_worship"]["religion"="muslim"](area.a);way["amenity"="place_of_worship"]["religion"="muslim"](area.a););out center;`;
-
-    fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:query })
-    .then(r => r.json())
-    .then(data => {
-        data.elements.forEach(el => {
-            const lat = el.lat || el.center.lat;
-            const lon = el.lon || el.center.lon;
-            const name = el.tags.name || "İsimsiz Cami";
-
-            const m = L.circleMarker([lat, lon], {
-                radius: 8, color: "#14532d", fillColor: "#fbbf24", fillOpacity: 0.9
-            }).bindPopup(`
-                <strong>${name}</strong><br>
-                <a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi</a>
-            `);
-            m.name = name.toLowerCase();
-            m.addTo(map);
-            markers.push(m);
+    fetch("https://overpass-api.de/api/interpreter", { method:"POST", body:query }).then(r=>r.json()).then(data=>{
+        data.elements.forEach(el=>{
+            const lat=el.lat||el.center.lat, lon=el.lon||el.center.lon, name=el.tags.name||"İsimsiz Cami";
+            const m = L.circleMarker([lat, lon], {radius: 8, color: "#14532d", fillColor: "#fbbf24", fillOpacity: 0.9})
+            .bindPopup(`<strong>${name}</strong><br><a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}">🚗 Yol Tarifi</a>`);
+            m.name = name.toLowerCase(); markers.push(m); m.addTo(map);
         });
-        if(markers.length > 0) map.fitBounds(L.featureGroup(markers).getBounds());
+        if(markers.length>0) map.fitBounds(L.featureGroup(markers).getBounds());
     });
 }
-
-// Arama Filtreleme
 function filterMarkers() {
-    const searchVal = document.getElementById("searchInput").value.toLowerCase();
-    markers.forEach(m => {
-        if(m.name.includes(searchVal)) m.addTo(map);
-        else map.removeLayer(m);
-    });
+    const s = document.getElementById("searchInput").value.toLowerCase();
+    markers.forEach(m => { if(m.name.includes(s)) m.addTo(map); else map.removeLayer(m); });
 }
-
-// En Yakın Camiyi Bul
 function findNearest() {
-    if (!userLocation) {
-        alert("Konumunuz henüz alınamadı. Lütfen tarayıcıdan konum izni verin.");
-        return;
-    }
-    if (markers.length === 0) {
-        alert("Önce bir şehir seçmelisiniz.");
-        return;
-    }
-
-    let nearest = null;
-    let minDist = Infinity;
-
-    markers.forEach(m => {
-        const dist = userLocation.distanceTo(m.getLatLng());
-        if (dist < minDist) {
-            minDist = dist;
-            nearest = m;
-        }
-    });
-
-    if (nearest) {
-        map.setView(nearest.getLatLng(), 17);
-        nearest.openPopup();
-    }
+    if(!userLocation || markers.length===0) return alert("Konum alınamadı veya şehir seçilmedi!");
+    let nearest = markers.reduce((prev, curr) => userLocation.distanceTo(curr.getLatLng()) < userLocation.distanceTo(prev.getLatLng()) ? curr : prev);
+    map.setView(nearest.getLatLng(), 17); nearest.openPopup();
 }
-
 ilSelect.onchange = fetchData;
 </script>
 </body>
