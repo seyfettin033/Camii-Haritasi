@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>🇹🇷 Türkiye Camii Rehberi & Veri Katkı Haritası</title>
+<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -18,13 +18,13 @@ body {
   flex-direction: column;
 }
 
-/* Türk Bayrağı Temalı Header */
+/* Cami Yeşili Header */
 header {
-  background: linear-gradient(135deg, #e30a17 0%, #a60710 100%);
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
   color: #ffffff;
-  padding: 14px 12px;
+  padding: 16px 12px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(227, 10, 23, 0.25);
+  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.25);
   position: relative;
 }
 header h1 {
@@ -34,25 +34,56 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   letter-spacing: 0.5px;
 }
+.bayrak-img {
+  width: 28px;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
 header small { 
-  color: #f8fafc; 
+  color: #ecfdf5; 
   opacity: 0.9;
   font-size: 12px;
   margin-top: 4px;
   display: block;
 }
 
-.etiket {
-  background: #fff5f5;
-  color: #9b1c1c;
+/* Günün Ayeti Kartı */
+.ayet-box {
+  background: #f0fdf4;
+  color: #064e3b;
   text-align: center;
-  font-size: 12px;
-  padding: 8px;
-  border-bottom: 1px solid #feb2b2;
-  font-weight: 500;
+  padding: 10px 14px;
+  border-bottom: 1px solid #bbf7d0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.ayet-box strong {
+  color: #047857;
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.ayet-kaynak {
+  font-size: 11px;
+  color: #15803d;
+  font-weight: 600;
+  margin-top: 3px;
+  display: block;
+}
+
+.etiket {
+  background: #f8fafc;
+  color: #475569;
+  text-align: center;
+  font-size: 11px;
+  padding: 6px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 /* Sekmeler */
@@ -77,8 +108,8 @@ header small {
 }
 .tab-btn.active {
   background: #ffffff;
-  color: #e30a17;
-  border-bottom: 3px solid #e30a17;
+  color: #047857;
+  border-bottom: 3px solid #047857;
 }
 
 .filters {
@@ -102,8 +133,8 @@ select, input {
   outline: none;
 }
 select:focus, input:focus {
-  border-color: #e30a17;
-  box-shadow: 0 0 0 3px rgba(227, 10, 23, 0.1);
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
 }
 
 .search-box {
@@ -114,7 +145,7 @@ select:focus, input:focus {
 
 .btn-action {
   padding: 10px 18px;
-  background: #e30a17;
+  background: #047857;
   color: white;
   border: none;
   border-radius: 8px;
@@ -123,13 +154,13 @@ select:focus, input:focus {
   transition: background 0.2s;
 }
 .btn-action:hover {
-  background: #b90813;
+  background: #065f46;
 }
 
 .btn-location {
   width: 100%;
   padding: 12px;
-  background: #e30a17;
+  background: #047857;
   color: white;
   border: none;
   border-radius: 8px;
@@ -140,11 +171,11 @@ select:focus, input:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 2px 4px rgba(227, 10, 23, 0.2);
+  box-shadow: 0 2px 4px rgba(4, 120, 87, 0.2);
   transition: background 0.2s;
 }
 .btn-location:hover {
-  background: #b90813;
+  background: #065f46;
 }
 
 #sayac {
@@ -161,7 +192,7 @@ select:focus, input:focus {
 
 /* Popup Stilleri */
 .popup { font-size:13px; text-align: center; }
-.popup b { color:#e30a17; display: block; margin-bottom: 2px; font-size: 14px; }
+.popup b { color:#047857; display: block; margin-bottom: 2px; font-size: 14px; }
 .popup small { color: #64748b; display: block; margin-bottom: 8px; }
 
 .popup-links {
@@ -196,9 +227,19 @@ select:focus, input:focus {
 <body>
 
 <header>
-  <h1>🇹🇷 Türkiye Camii Rehberi</h1>
+  <h1>
+    <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
+    Türkiye Camii Rehberi
+  </h1>
   <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
 </header>
+
+<!-- Günün Ayeti -->
+<div class="ayet-box">
+  <strong>📖 GÜNÜN AYETİ-İ KERİMESİ</strong>
+  <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inanan, namazı kılan, zekatı veren ve Allah'tan başkasından korkmayan kimseler imar eder..."</span>
+  <span id="ayet-sure" class="ayet-kaynak">(Tevbe Suresi, 18. Ayet)</span>
+</div>
 
 <div class="etiket">
 ℹ️ Camileri inceleyebilir, Mapillary/Panoramax ile fotoğrafları görebilir veya OSM'ye not bırakabilirsiniz.
@@ -248,6 +289,38 @@ select:focus, input:focus {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+// Günün Ayetleri Havuzu (Rastgele Seçilir)
+const ayetler = [
+  {
+    metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inanan, namazı kılan, zekatı veren ve Allah'tan başkasından korkmayan kimseler imar eder.",
+    sure: "(Tevbe Suresi, 18. Ayet)"
+  },
+  {
+    metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.",
+    sure: "(Ankebût Suresi, 45. Ayet)"
+  },
+  {
+    metin: "Ey Âdemoğulları! Her ibadet yerinde ziynetinizi takının (güzel ve temiz giyinin).",
+    sure: "(A'râf Suresi, 31. Ayet)"
+  },
+  {
+    metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.",
+    sure: "(Râd Suresi, 28. Ayet)"
+  },
+  {
+    metin: "Kullarıma söyle: En güzel sözü söylesinler...",
+    sure: "(İsrâ Suresi, 53. Ayet)"
+  }
+];
+
+// Sayfa yüklendiğinde rastgele ayet seç
+function ayetGetir() {
+  const rastgele = ayetler[Math.floor(Math.random() * ayetler.length)];
+  document.getElementById("ayet-metin").innerText = `"${rastgele.metin}"`;
+  document.getElementById("ayet-sure").innerText = rastgele.sure;
+}
+ayetGetir();
+
 // 81 İl (Plaka Koduna Göre Sıralı + Tüm Türkiye)
 const iller = [
   { plaka: "00", isim: "Tüm Türkiye" },
@@ -334,7 +407,7 @@ const iller = [
   { plaka: "81", isim: "Düzce" }
 ];
 
-// Select menülerini plaka sırasına göre doldurma
+// Select menülerini doldurma
 const ilSelectIsimsiz = document.getElementById("il-isimsiz");
 const ilSelectTum = document.getElementById("il-tum");
 
@@ -419,7 +492,7 @@ function konumlaCamileriBul() {
       out center;
       `;
 
-      overpassSorgula(query, "Mevcut konumunuza yakındaki camiler (3 km yarıçap)", "#e30a17", false);
+      overpassSorgula(query, "Mevcut konumunuza yakındaki camiler (3 km yarıçap)", "#047857", false);
     },
     (error) => {
       let mesaj = "Konum alınamadı.";
@@ -480,7 +553,7 @@ function tumCamileriGetir(il) {
   out center 500;
   `;
 
-  overpassSorgula(query, `<b>${il}</b> genelindeki tüm camiler`, "#e30a17");
+  overpassSorgula(query, `<b>${il}</b> genelindeki tüm camiler`, "#047857");
 }
 
 // 3. İSİMLE CAMİ ARA
@@ -501,7 +574,7 @@ function camiAra() {
   out center 100;
   `;
 
-  overpassSorgula(query, `<b>"${isim}"</b> araması sonuçları`, "#e30a17");
+  overpassSorgula(query, `<b>"${isim}"</b> araması sonuçları`, "#047857");
 }
 
 // Ortak Overpass İstek ve Popup Oluşturma Fonksiyonu
