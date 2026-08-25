@@ -272,7 +272,10 @@ function switchTab(mode) {
   }
 }
 
-// 📍 KONUM BULMA (Güvenlik Önlemli)
+// Kilise, Havra vb. İbadethaneleri Engelleme Filtresi
+const dinFiltresi = '["building"!~"church|cathedral|chapel"]["religion"!~"christian|jewish|buddhist|hindu"]';
+
+// 📍 KONUM BULMA (Sadece Camiler & İbadethanesi Cami Olanlar)
 function konumlaCamileriBul() {
   const sayac = document.getElementById("sayac");
 
@@ -298,11 +301,10 @@ function konumlaCamileriBul() {
       L.marker([lat, lon]).addTo(layer).bindPopup("<b>📍 Buradasınız</b>").openPopup();
       map.setView([lat, lon], 14);
 
-      // 5 km yarıçapında arar
       const query = `[out:json][timeout:25];
       (
-        node["amenity"="place_of_worship"](around:5000, ${lat}, ${lon});
-        way["amenity"="place_of_worship"](around:5000, ${lat}, ${lon});
+        node["amenity"="place_of_worship"]${dinFiltresi}(around:5000, ${lat}, ${lon});
+        way["amenity"="place_of_worship"]${dinFiltresi}(around:5000, ${lat}, ${lon});
       );
       out center;`;
 
@@ -316,35 +318,37 @@ function konumlaCamileriBul() {
   );
 }
 
-// ⚠️ İSİMSİZ CAMİLERİ GETİR (Optimized Sorgu)
+// ⚠️ İSİMSİZ CAMİLER
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:30];
   area["name"="${il}"]["admin_level"="4"]->.a;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    node["amenity"="place_of_worship"]${dinFiltresi}(!"name")(area.a);
+    way["amenity"="place_of_worship"]${dinFiltresi}(!"name")(area.a);
   );
   out center 300;`;
 
   overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#dc2626");
 }
 
+// 🕌 TÜM CAMİLER
 function tumCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:30];
   area["name"="${il}"]["admin_level"="4"]->.a;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](area.a);
+    node["amenity"="place_of_worship"]${dinFiltresi}(area.a);
+    way["amenity"="place_of_worship"]${dinFiltresi}(area.a);
   );
   out center 300;`;
 
   overpassSorgula(query, `${il} ilindeki camiler`, "#047857");
 }
 
+// 🔍 CAMİ ARAMA
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
   if (!isim) return alert("Bir isim girin.");
@@ -352,8 +356,8 @@ function camiAra() {
   const query = `[out:json][timeout:30];
   area["name"="Türkiye"]["admin_level"="2"]->.tr;
   (
-    node["amenity"="place_of_worship"]["name"~"${isim}",i](area.tr);
-    way["amenity"="place_of_worship"]["name"~"${isim}",i](area.tr);
+    node["amenity"="place_of_worship"]${dinFiltresi}["name"~"${isim}",i](area.tr);
+    way["amenity"="place_of_worship"]${dinFiltresi}["name"~"${isim}",i](area.tr);
   );
   out center 100;`;
 
@@ -371,7 +375,13 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   })
   .then(r => r.json())
   .then(data => {
-    const adet = data.elements.length;
+    // İsimde Kilise, Church, Havra veya Sinagog geçenleri JavaScript tarafında da kesin olarak süzüyoruz
+    const elements = data.elements.filter(el => {
+      const name = (el.tags && el.tags.name) ? el.tags.name.toLowerCase() : "";
+      return !name.includes("kilise") && !name.includes("church") && !name.includes("havra") && !name.includes("sinagog") && !name.includes("synagogue");
+    });
+
+    const adet = elements.length;
 
     if (adet === 0) {
       sayac.innerHTML = `❌ ${baslikMetni} için sonuç bulunamadı.`;
@@ -381,7 +391,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
     sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
 
     const bounds = [];
-    data.elements.forEach(el => {
+    elements.forEach(el => {
       const lat = el.lat || el.center.lat;
       const lon = el.lon || el.center.lon;
       const camiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
