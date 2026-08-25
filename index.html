@@ -44,16 +44,19 @@ header small { color:#6b7280; }
   display: flex;
   background: #e5e7eb;
   border-bottom: 1px solid #d1d5db;
+  overflow-x: auto;
 }
 .tab-btn {
   flex: 1;
-  padding: 10px;
+  min-width: 110px;
+  padding: 10px 6px;
   border: none;
   background: transparent;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
   color: #4b5563;
+  white-space: nowrap;
 }
 .tab-btn.active {
   background: #fff;
@@ -85,7 +88,7 @@ select, input {
   gap: 6px;
 }
 .search-box input { flex: 1; }
-.search-box button {
+.btn-action {
   padding: 8px 14px;
   background: #14532d;
   color: white;
@@ -93,6 +96,27 @@ select, input {
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+}
+.btn-action:hover {
+  background: #15803d;
+}
+.btn-location {
+  width: 100%;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-location:hover {
+  background: #1d4ed8;
 }
 
 #sayac {
@@ -105,7 +129,7 @@ select, input {
   border-bottom:1px solid #e5e7eb;
 }
 
-#map { flex: 1; width: 100%; min-height: 300px; }
+#map { flex: 1; width: 100%; min-height: 350px; }
 
 /* Popup Stilleri */
 .popup { font-size:13px; text-align: center; }
@@ -153,14 +177,22 @@ select, input {
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
   <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
   <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
 </div>
 
 <div class="filters">
+  <!-- 0. Mod: Konumuma Yakın Camiler -->
+  <div id="group-konum" class="filter-group active">
+    <button class="btn-location" onclick="konumlaCamileriBul()">
+      📍 Bulunduğum Konuma Göre Yakındaki Camileri Göster
+    </button>
+  </div>
+
   <!-- 1. Mod: İsimsiz Camileri Bul -->
-  <div id="group-isimsiz" class="filter-group active">
+  <div id="group-isimsiz" class="filter-group">
     <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
       <option value="">İl seçiniz (İsimsiz camiler için)</option>
     </select>
@@ -177,44 +209,118 @@ select, input {
   <div id="group-arama" class="filter-group">
     <div class="search-box">
       <input type="text" id="cami-ismi" placeholder="Cami adı girin (Örn: Süleymaniye, Ulu Cami)">
-      <button onclick="camiAra()">Ara</button>
+      <button class="btn-action" onclick="camiAra()">Ara</button>
     </div>
   </div>
 </div>
 
-<div id="sayac">Lütfen yukarıdaki seçeneklerden bir filtre belirleyin</div>
+<div id="sayac">Bulunduğunuz yerdeki camileri aramak için butona tıklayın.</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+// 81 İl (Plaka Koduna Göre Sıralı + Tüm Türkiye)
 const iller = [
-"Adana","Adıyaman","Afyonkarahisar","Ağrı","Amasya","Ankara","Antalya","Artvin",
-"Aydın","Balıkesir","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa",
-"Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Edirne","Elazığ",
-"Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari",
-"Hatay","Isparta","Mersin","İstanbul","İzmir","Kars","Kastamonu","Kayseri",
-"Kırklareli","Kırşehir","Kocaeli","Konya","Kütahya","Malatya","Manisa",
-"Kahramanmaraş","Mardin","Muğla","Muş","Nevşehir","Niğde","Ordu","Rize",
-"Sakarya","Samsun","Siirt","Sinop","Sivas","Tekirdağ","Tokat","Trabzon",
-"Tunceli","Şanlıurfa","Uşak","Van","Yozgat","Zonguldak","Aksaray","Bayburt",
-"Karaman","Kırıkkale","Batman","Şırnak","Bartın","Ardahan","Iğdır","Yalova",
-"Karabük","Kilis","Osmaniye","Düzce"
+  { plaka: "00", isim: "Tüm Türkiye" },
+  { plaka: "01", isim: "Adana" },
+  { plaka: "02", isim: "Adıyaman" },
+  { plaka: "03", isim: "Afyonkarahisar" },
+  { plaka: "04", isim: "Ağrı" },
+  { plaka: "05", isim: "Amasya" },
+  { plaka: "06", isim: "Ankara" },
+  { plaka: "07", isim: "Antalya" },
+  { plaka: "08", isim: "Artvin" },
+  { plaka: "09", isim: "Aydın" },
+  { plaka: "10", isim: "Balıkesir" },
+  { plaka: "11", isim: "Bilecik" },
+  { plaka: "12", isim: "Bingöl" },
+  { plaka: "13", isim: "Bitlis" },
+  { plaka: "14", isim: "Bolu" },
+  { plaka: "15", isim: "Burdur" },
+  { plaka: "16", isim: "Bursa" },
+  { plaka: "17", isim: "Çanakkale" },
+  { plaka: "18", isim: "Çankırı" },
+  { plaka: "19", isim: "Çorum" },
+  { plaka: "20", isim: "Denizli" },
+  { plaka: "21", isim: "Diyarbakır" },
+  { plaka: "22", isim: "Edirne" },
+  { plaka: "23", isim: "Elazığ" },
+  { plaka: "24", isim: "Erzincan" },
+  { plaka: "25", isim: "Erzurum" },
+  { plaka: "26", isim: "Eskişehir" },
+  { plaka: "27", isim: "Gaziantep" },
+  { plaka: "28", isim: "Giresun" },
+  { plaka: "29", isim: "Gümüşhane" },
+  { plaka: "30", isim: "Hakkari" },
+  { plaka: "31", isim: "Hatay" },
+  { plaka: "32", isim: "Isparta" },
+  { plaka: "33", isim: "Mersin" },
+  { plaka: "34", isim: "İstanbul" },
+  { plaka: "35", isim: "İzmir" },
+  { plaka: "36", isim: "Kars" },
+  { plaka: "37", isim: "Kastamonu" },
+  { plaka: "38", isim: "Kayseri" },
+  { plaka: "39", isim: "Kırklareli" },
+  { plaka: "40", isim: "Kırşehir" },
+  { plaka: "41", isim: "Kocaeli" },
+  { plaka: "42", isim: "Konya" },
+  { plaka: "43", isim: "Kütahya" },
+  { plaka: "44", isim: "Malatya" },
+  { plaka: "45", isim: "Manisa" },
+  { plaka: "46", isim: "Kahramanmaraş" },
+  { plaka: "47", isim: "Mardin" },
+  { plaka: "48", isim: "Muğla" },
+  { plaka: "49", isim: "Muş" },
+  { plaka: "50", isim: "Nevşehir" },
+  { plaka: "51", isim: "Niğde" },
+  { plaka: "52", isim: "Ordu" },
+  { plaka: "53", isim: "Rize" },
+  { plaka: "54", isim: "Sakarya" },
+  { plaka: "55", isim: "Samsun" },
+  { plaka: "56", isim: "Siirt" },
+  { plaka: "57", isim: "Sinop" },
+  { plaka: "58", isim: "Sivas" },
+  { plaka: "59", isim: "Tekirdağ" },
+  { plaka: "60", isim: "Tokat" },
+  { plaka: "61", isim: "Trabzon" },
+  { plaka: "62", isim: "Tunceli" },
+  { plaka: "63", isim: "Şanlıurfa" },
+  { plaka: "64", isim: "Uşak" },
+  { plaka: "65", isim: "Van" },
+  { plaka: "66", isim: "Yozgat" },
+  { plaka: "67", isim: "Zonguldak" },
+  { plaka: "68", isim: "Aksaray" },
+  { plaka: "69", isim: "Bayburt" },
+  { plaka: "70", isim: "Karaman" },
+  { plaka: "71", isim: "Kırıkkale" },
+  { plaka: "72", isim: "Batman" },
+  { plaka: "73", isim: "Şırnak" },
+  { plaka: "74", isim: "Bartın" },
+  { plaka: "75", isim: "Ardahan" },
+  { plaka: "76", isim: "Iğdır" },
+  { plaka: "77", isim: "Yalova" },
+  { plaka: "78", isim: "Karabük" },
+  { plaka: "79", isim: "Kilis" },
+  { plaka: "80", isim: "Osmaniye" },
+  { plaka: "81", isim: "Düzce" }
 ];
 
-// Select menülerini doldurma
+// Select menülerini plaka sırasına göre doldurma
 const ilSelectIsimsiz = document.getElementById("il-isimsiz");
 const ilSelectTum = document.getElementById("il-tum");
 
 iller.forEach(il => {
+  const metin = `${il.plaka} - ${il.isim}`;
+
   const o1 = document.createElement("option");
-  o1.value = il;
-  o1.textContent = il;
+  o1.value = il.isim;
+  o1.textContent = metin;
   ilSelectIsimsiz.appendChild(o1);
 
   const o2 = document.createElement("option");
-  o2.value = il;
-  o2.textContent = il;
+  o2.value = il.isim;
+  o2.textContent = metin;
   ilSelectTum.appendChild(o2);
 });
 
@@ -235,53 +341,120 @@ function switchTab(mode) {
   layer.clearLayers();
   const sayac = document.getElementById("sayac");
 
-  if (mode === 'isimsiz') {
+  if (mode === 'konum') {
     document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('group-konum').classList.add('active');
+    sayac.innerHTML = "Bulunduğunuz yerdeki camileri aramak için 'Bulunduğum Konuma Göre Yakındaki Camileri Göster' butonuna tıklayın.";
+  } else if (mode === 'isimsiz') {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('group-isimsiz').classList.add('active');
     sayac.innerHTML = "İsimsiz camileri listelemek için bir il seçin.";
   } else if (mode === 'tum') {
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.querySelectorAll('.tab-btn')[2].classList.add('active');
     document.getElementById('group-tum').classList.add('active');
     sayac.innerHTML = "Seçtiğiniz ildeki tüm camileri haritada görmek için bir il seçin.";
   } else {
-    document.querySelectorAll('.tab-btn')[2].classList.add('active');
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
     document.getElementById('group-arama').classList.add('active');
     sayac.innerHTML = "Aramak istediğiniz cami adını yazıp 'Ara' butonuna basın.";
   }
+}
+
+// 0. KONUMA GÖRE YAKINDAKİ CAMİLERİ BUL
+function konumlaCamileriBul() {
+  const sayac = document.getElementById("sayac");
+
+  if (!navigator.geolocation) {
+    alert("Tarayıcınız konum özelliğini desteklemiyor.");
+    return;
+  }
+
+  sayac.innerHTML = "📡 Konumunuz alınıyor, lütfen izin verin...";
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      // Kullanıcının kendi konumunu gösteren Mavi İşaretçi
+      layer.clearLayers();
+      const userMarker = L.marker([lat, lon]).addTo(layer)
+        .bindPopup("<b>📍 Sizin Konumunuz</b>").openPopup();
+
+      map.setView([lat, lon], 14);
+
+      // Konumun etrafındaki 3000 metrelik (3 km) yarıçaptaki camileri getir
+      const query = `
+      [out:json][timeout:30];
+      (
+        node["amenity"="place_of_worship"]["religion"="muslim"](around:3000, ${lat}, ${lon});
+        way["amenity"="place_of_worship"]["religion"="muslim"](around:3000, ${lat}, ${lon});
+      );
+      out center;
+      `;
+
+      overpassSorgula(query, "Mevcut konumunuza yakındaki camiler (3 km yarıçap)", "#2563eb", false);
+    },
+    (error) => {
+      let mesaj = "Konum alınamadı.";
+      if (error.code === error.PERMISSION_DENIED) {
+        mesaj = "Konum erişim izni reddedildi. Lütfen tarayıcı ayarlarınızdan izin verin.";
+      }
+      sayac.innerHTML = `❌ ${mesaj}`;
+      alert(mesaj);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
 }
 
 // 1. İSİMSİZ CAMİLERİ GETİR
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
+  let areaFilter = `area["name"="${il}"]["admin_level"="4"]->.a;`;
+  let areaTarget = `(area.a)`;
+
+  if (il === "Tüm Türkiye") {
+    areaFilter = `area["name"="Türkiye"]["admin_level"="2"]->.tr;`;
+    areaTarget = `(area.tr)`;
+  }
+
   const query = `
   [out:json][timeout:30];
-  area["name"="${il}"]["admin_level"="4"]->.a;
+  ${areaFilter}
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);
+    node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."]${areaTarget};
+    way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."]${areaTarget};
   );
-  out center;
+  out center 500;
   `;
 
-  overpassSorgula(query, `<b>${il}</b> ilindeki isimsiz camiler`, "#ef4444");
+  overpassSorgula(query, `<b>${il}</b> genelindeki isimsiz camiler`, "#ef4444");
 }
 
 // 2. TÜM CAMİLERİ GETİR
 function tumCamileriGetir(il) {
   if (!il) return;
 
+  let areaFilter = `area["name"="${il}"]["admin_level"="4"]->.a;`;
+  let areaTarget = `(area.a)`;
+
+  if (il === "Tüm Türkiye") {
+    areaFilter = `area["name"="Türkiye"]["admin_level"="2"]->.tr;`;
+    areaTarget = `(area.tr)`;
+  }
+
   const query = `
   [out:json][timeout:30];
-  area["name"="${il}"]["admin_level"="4"]->.a;
+  ${areaFilter}
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](area.a);
+    node["amenity"="place_of_worship"]["religion"="muslim"]${areaTarget};
+    way["amenity"="place_of_worship"]["religion"="muslim"]${areaTarget};
   );
   out center 500;
   `;
 
-  overpassSorgula(query, `<b>${il}</b> ilindeki tüm camiler`, "#14532d");
+  overpassSorgula(query, `<b>${il}</b> genelindeki tüm camiler`, "#14532d");
 }
 
 // 3. İSİMLE CAMİ ARA
@@ -306,8 +479,9 @@ function camiAra() {
 }
 
 // Ortak Overpass İstek ve Popup Oluşturma Fonksiyonu
-function overpassSorgula(query, baslikMetni, noktaRengi) {
-  layer.clearLayers();
+function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
+  if (temizle) layer.clearLayers();
+  
   const sayac = document.getElementById("sayac");
   sayac.innerHTML = `⏳ Veriler çekiliyor...`;
 
@@ -389,7 +563,9 @@ function overpassSorgula(query, baslikMetni, noktaRengi) {
       }).addTo(layer).bindPopup(popup);
     });
 
-    map.fitBounds(bounds, { padding: [30, 30] });
+    if (bounds.length > 0 && temizle) {
+      map.fitBounds(bounds, { padding: [30, 30] });
+    }
   })
   .catch(err => {
     sayac.innerHTML = `❌ Veri yüklenirken sorun oluştu. Lütfen tekrar deneyin.`;
@@ -407,5 +583,3 @@ document.getElementById("cami-ismi").addEventListener("keypress", function(e) {
 
 </body>
 </html>
-
-
