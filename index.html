@@ -3,53 +3,737 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Yakındaki Tüm Camiler</title>
-  
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  
+
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f8; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    h1 { margin-top: 0; color: #2c3e50; }
-    .controls { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
-    button { background-color: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 15px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
-    button:hover { background-color: #219150; }
-    #status { font-weight: bold; color: #555; }
-    #map { height: 400px; width: 100%; border-radius: 8px; margin-bottom: 20px; }
-    .list-container { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
-    ul { list-style: none; padding: 0; margin: 0; }
-    li { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-    li:last-child { border-bottom: none; }
-    li:nth-child(even) { background-color: #f9f9f9; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #198754;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #146c43;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f1f3f5;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    #cami-listesi {
+      margin-top: 15px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .cami {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .cami-adi {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    .mesafe {
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .harita-link {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #0d6efd;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+
+    .harita-link:hover {
+      background: #0b5ed7;
+    }
+
+    .hata {
+      color: #b02a37;
+      background: #f8d7da !important;
+    }
+
+    .basarili {
+      color: #146c43;
+      background: #d1e7dd !important;
+    }
   </style>
 </head>
+
 <body>
 
 <div class="container">
-  <h1>Yakındaki Tüm Camiler</h1>
-  
-  <div class="controls">
-    <button onclick="camileriGetir()">Konumumu Al ve Camileri Bul</button>
-    <span id="status">Butona basarak yakındaki camileri arayabilirsiniz.</span>
+
+  <h2>🕌 Yakındaki Tüm Camiler</h2>
+
+  <button id="araBtn" onclick="camileriBul()">
+    📍 Tüm Camileri Bul
+  </button>
+
+  <div id="status">
+    Arama yapmak için butona basın.
   </div>
 
-  <div id="map"></div>
+  <ul id="cami-listesi"></ul>
 
-  <h3>Bulunan Camiler Listesi</h3>
-  <div class="list-container">
-    <ul id="cami-listesi">
-      <li style="color: #888;">Henüz arama yapılmadı.</li>
-    </ul>
-  </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  let map;
-  let markerGroup;
 
-  // Sayfa yüklendiğinde varsayılan bir harita oluştur
-  window.onload = function() {
-    map = L.map('map').setView(
+  // =========================================================
+  // AYARLAR
+  // =========================================================
+
+  const RADIUS = 5000; // 5 km
+
+  const OVERPASS_SERVERS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter"
+  ];
+
+
+  // =========================================================
+  // CAMİLERİ BUL
+  // =========================================================
+
+  async function camileriBul() {
+
+    const status = document.getElementById("status");
+    const liste = document.getElementById("cami-listesi");
+    const buton = document.getElementById("araBtn");
+
+    liste.innerHTML = "";
+
+    buton.disabled = true;
+    buton.innerText = "⏳ Aranıyor...";
+
+    status.className = "";
+    status.innerText = "📍 Konumunuz alınıyor...";
+
+
+    // ---------------------------------------------------------
+    // TARAYICI KONUM DESTEĞİ
+    // ---------------------------------------------------------
+
+    if (!navigator.geolocation) {
+
+      status.className = "hata";
+      status.innerText =
+        "❌ Tarayıcınız konum bilgisini desteklemiyor.";
+
+      buton.disabled = false;
+      buton.innerText = "📍 Tüm Camileri Bul";
+
+      return;
+    }
+
+
+    // ---------------------------------------------------------
+    // KONUMU AL
+    // ---------------------------------------------------------
+
+    navigator.geolocation.getCurrentPosition(
+
+      async function(position) {
+
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        console.log("Konum:", lat, lon);
+
+        status.innerText =
+          "🔎 5 km çevrenizdeki camiler aranıyor...";
+
+
+        try {
+
+          const camiler = await overpasstanCamileriGetir(
+            lat,
+            lon
+          );
+
+
+          // ---------------------------------------------------
+          // SONUÇ YOK
+          // ---------------------------------------------------
+
+          if (!camiler || camiler.length === 0) {
+
+            status.className = "hata";
+
+            status.innerText =
+              "❌ 5 km çevrenizde cami bulunamadı.";
+
+            return;
+          }
+
+
+          // ---------------------------------------------------
+          // MESAFE HESAPLA
+          // ---------------------------------------------------
+
+          camiler.forEach(cami => {
+
+            cami.mesafe = mesafeHesapla(
+              lat,
+              lon,
+              cami.lat,
+              cami.lon
+            );
+
+          });
+
+
+          // ---------------------------------------------------
+          // MESAFEYE GÖRE SIRALA
+          // ---------------------------------------------------
+
+          camiler.sort((a, b) => {
+
+            return a.mesafe - b.mesafe;
+
+          });
+
+
+          // ---------------------------------------------------
+          // SONUÇ
+          // ---------------------------------------------------
+
+          status.className = "basarili";
+
+          status.innerText =
+            `✅ ${camiler.length} cami bulundu.`;
+
+
+          // ---------------------------------------------------
+          // LİSTELE
+          // ---------------------------------------------------
+
+          camiler.forEach(cami => {
+
+            const li = document.createElement("li");
+
+            li.className = "cami";
+
+
+            const ad = document.createElement("div");
+
+            ad.className = "cami-adi";
+
+            ad.innerText =
+              "🕌 " + cami.name;
+
+
+            const mesafe = document.createElement("div");
+
+            mesafe.className = "mesafe";
+
+            mesafe.innerText =
+              "📏 " + formatMesafe(cami.mesafe);
+
+
+            const link = document.createElement("a");
+
+            link.className = "harita-link";
+
+            link.target = "_blank";
+
+            link.rel = "noopener noreferrer";
+
+            link.href =
+              "https://www.google.com/maps/dir/?api=1&destination=" +
+              cami.lat +
+              "," +
+              cami.lon;
+
+            link.innerText =
+              "🧭 Yol Tarifi";
+
+
+            li.appendChild(ad);
+
+            li.appendChild(mesafe);
+
+            li.appendChild(link);
+
+            liste.appendChild(li);
+
+          });
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          status.className = "hata";
+
+          status.innerText =
+            "❌ Camiler alınırken hata oluştu. " +
+            "Lütfen tekrar deneyin.";
+
+        }
+
+        finally {
+
+          buton.disabled = false;
+
+          buton.innerText =
+            "📍 Tüm Camileri Bul";
+
+        }
+
+      },
+
+
+      // -------------------------------------------------------
+      // KONUM HATASI
+      // -------------------------------------------------------
+
+      function(error) {
+
+        console.error("Konum hatası:", error);
+
+        status.className = "hata";
+
+        switch (error.code) {
+
+          case error.PERMISSION_DENIED:
+
+            status.innerText =
+              "❌ Konum izni reddedildi. " +
+              "Tarayıcı ayarlarından konum iznini açın.";
+
+            break;
+
+
+          case error.POSITION_UNAVAILABLE:
+
+            status.innerText =
+              "❌ Konum bilgisi alınamadı.";
+
+            break;
+
+
+          case error.TIMEOUT:
+
+            status.innerText =
+              "❌ Konum alma işlemi zaman aşımına uğradı.";
+
+            break;
+
+
+          default:
+
+            status.innerText =
+              "❌ Bilinmeyen konum hatası.";
+
+        }
+
+        buton.disabled = false;
+
+        buton.innerText =
+          "📍 Tüm Camileri Bul";
+
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+
+    );
+
+  }
+
+
+  // =========================================================
+  // OVERPASS'TAN CAMİLERİ GETİR
+  // =========================================================
+
+  async function overpasstanCamileriGetir(lat, lon) {
+
+    /*
+      Node:
+      Nokta olarak kaydedilmiş camiler
+
+      Way:
+      Alan olarak çizilmiş camiler
+
+      Relation:
+      İlişki olarak kaydedilmiş camiler
+
+      religion=muslim şartı sayesinde
+      Müslüman ibadethanelerini arıyoruz.
+    */
+
+    const query = `
+      [out:json][timeout:25];
+
+      (
+        node[
+          "amenity"="place_of_worship"
+        ][
+          "religion"="muslim"
+        ](
+          around:${RADIUS},
+          ${lat},
+          ${lon}
+        );
+
+        way[
+          "amenity"="place_of_worship"
+        ][
+          "religion"="muslim"
+        ](
+          around:${RADIUS},
+          ${lat},
+          ${lon}
+        );
+
+        relation[
+          "amenity"="place_of_worship"
+        ][
+          "religion"="muslim"
+        ](
+          around:${RADIUS},
+          ${lat},
+          ${lon}
+        );
+      );
+
+      out center tags;
+    `;
+
+
+    // -------------------------------------------------------
+    // SUNUCULARI SIRAYLA DENE
+    // -------------------------------------------------------
+
+    let sonHata = null;
+
+
+    for (const server of OVERPASS_SERVERS) {
+
+      try {
+
+        console.log(
+          "Overpass sunucusu deneniyor:",
+          server
+        );
+
+
+        const response = await fetch(server, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/x-www-form-urlencoded;charset=UTF-8"
+          },
+
+          body:
+            "data=" + encodeURIComponent(query)
+
+        });
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "HTTP " + response.status
+          );
+
+        }
+
+
+        const data = await response.json();
+
+
+        if (!data.elements) {
+
+          throw new Error(
+            "Geçersiz Overpass cevabı"
+          );
+
+        }
+
+
+        console.log(
+          "Overpass sonuçları:",
+          data.elements
+        );
+
+
+        // ---------------------------------------------------
+        // KOORDİNATLARI NORMALLEŞTİR
+        // ---------------------------------------------------
+
+        const camiler = [];
+
+
+        data.elements.forEach(item => {
+
+          let itemLat = null;
+          let itemLon = null;
+
+
+          // Node
+
+          if (
+            item.type === "node" &&
+            typeof item.lat === "number" &&
+            typeof item.lon === "number"
+          ) {
+
+            itemLat = item.lat;
+            itemLon = item.lon;
+
+          }
+
+
+          // Way / Relation
+
+          else if (
+            item.center &&
+            typeof item.center.lat === "number" &&
+            typeof item.center.lon === "number"
+          ) {
+
+            itemLat = item.center.lat;
+            itemLon = item.center.lon;
+
+          }
+
+
+          if (
+            itemLat === null ||
+            itemLon === null
+          ) {
+
+            return;
+
+          }
+
+
+          const tags = item.tags || {};
+
+
+          let name =
+            tags.name ||
+            tags["name:tr"] ||
+            tags.alt_name ||
+            "İsimsiz Cami";
+
+
+          camiler.push({
+
+            id:
+              item.type +
+              "-" +
+              item.id,
+
+            name: name,
+
+            lat: itemLat,
+
+            lon: itemLon,
+
+            tags: tags
+
+          });
+
+        });
+
+
+        // ---------------------------------------------------
+        // MÜKERRERLERİ TEMİZLE
+        // ---------------------------------------------------
+
+        const benzersiz = [];
+
+        const koordinatlar = new Set();
+
+
+        camiler.forEach(cami => {
+
+          const key =
+            cami.lat.toFixed(6) +
+            "," +
+            cami.lon.toFixed(6);
+
+
+          if (!koordinatlar.has(key)) {
+
+            koordinatlar.add(key);
+
+            benzersiz.push(cami);
+
+          }
+
+        });
+
+
+        return benzersiz;
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Overpass hatası:",
+          server,
+          error
+        );
+
+        sonHata = error;
+
+      }
+
+    }
+
+
+    throw sonHata ||
+      new Error("Overpass sunucularına ulaşılamadı.");
+
+  }
+
+
+  // =========================================================
+  // İKİ KOORDİNAT ARASINDAKİ MESAFE
+  // =========================================================
+
+  function mesafeHesapla(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+  ) {
+
+    const R = 6371;
+
+    const dLat =
+      dereceRadyan(lat2 - lat1);
+
+    const dLon =
+      dereceRadyan(lon2 - lon1);
+
+
+    const a =
+      Math.sin(dLat / 2) *
+      Math.sin(dLat / 2) +
+
+      Math.cos(
+        dereceRadyan(lat1)
+      ) *
+
+      Math.cos(
+        dereceRadyan(lat2)
+      ) *
+
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+
+    const c =
+      2 *
+      Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1 - a)
+      );
+
+
+    return R * c;
+
+  }
+
+
+  // =========================================================
+  // DERECE → RADYAN
+  // =========================================================
+
+  function dereceRadyan(degree) {
+
+    return degree *
+      Math.PI /
+      180;
+
+  }
+
+
+  // =========================================================
+  // MESAFEYİ GÜZEL GÖSTER
+  // =========================================================
+
+  function formatMesafe(km) {
+
+    if (km < 1) {
+
+      return Math.round(km * 1000) +
+        " metre";
+
+    }
+
+    return km.toFixed(2) +
+      " km";
+
+  }
+
+</script>
+
+</body>
+</html>
