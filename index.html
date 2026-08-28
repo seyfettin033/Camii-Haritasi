@@ -51,6 +51,30 @@ header small {
   font-weight: 300;
 }
 
+/* Tam Üst Ortaya Eklenen Yenile Barı */
+.top-refresh-bar {
+  background: #643914;
+  padding: 6px 10px;
+  text-align: center;
+  border-bottom: 1px solid #4a2c11;
+}
+.btn-top-refresh {
+  background: #fcf8f2;
+  color: #5a3413;
+  border: none;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+.btn-top-refresh:hover {
+  background: #eae0d0;
+  transform: scale(1.03);
+}
+
 /* Canlı Katkı ve Saat Şeridi */
 .live-info-strip {
   display: flex;
@@ -167,34 +191,15 @@ select:focus, input:focus { border-color: #78481d; }
 }
 .btn-action:hover, .btn-location:hover { background: #5a3413; }
 
-/* Sayaç & Yenile Barı */
-.sayac-wrapper {
-  background: #f4ece1;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  border-bottom: 1px solid #e4d7c5;
-}
 #sayac {
+  background: #f4ece1;
+  padding: 10px;
+  text-align: center;
   font-size: 13.5px;
   font-weight: 600;
   color: #5c4232;
+  border-bottom: 1px solid #e4d7c5;
 }
-.btn-refresh {
-  background: #78481d;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-.btn-refresh:hover { background: #5a3413; }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
@@ -228,6 +233,11 @@ select:focus, input:focus { border-color: #78481d; }
   </h1>
   <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
 </header>
+
+<!-- Üst Orta Sorgu Yenileme Butonu -->
+<div class="top-refresh-bar">
+  <button class="btn-top-refresh" onclick="sorguyuSifirla()">🔄 Sorguyu Yenile</button>
+</div>
 
 <div class="live-info-strip">
   <div>🚀 <b>seyfettin033</b> Katkısı: <span id="osm-counter" class="badge">Yükleniyor...</span></div>
@@ -279,10 +289,7 @@ select:focus, input:focus { border-color: #78481d; }
   </div>
 </div>
 
-<div class="sayac-wrapper">
-  <div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
-  <button class="btn-refresh" onclick="location.reload()">🔄 Yenile</button>
-</div>
+<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
 
 <div id="map"></div>
 
@@ -354,6 +361,17 @@ const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 const layer = L.layerGroup().addTo(map);
 
+// Sorgu Sıfırlama
+function sorguyuSifirla() {
+  layer.clearLayers();
+  map.setView([39, 35], 6);
+  document.getElementById("il-isimsiz").value = "";
+  document.getElementById("il-tum").value = "";
+  document.getElementById("il-arama").value = "";
+  document.getElementById("cami-ismi").value = "";
+  document.getElementById("sayac").innerHTML = "Sorgu sıfırlandı. Yeni bir seçim yapabilirsiniz.";
+}
+
 function switchTab(mode) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
@@ -379,7 +397,7 @@ function konumlaCamileriBul() {
   const sayac = document.getElementById("sayac");
 
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-    alert("Konum özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir.");
+    alert("Konum mevkii özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir.");
     sayac.innerHTML = "❌ Güvenli bağlantı (HTTPS) gerekli.";
     return;
   }
@@ -421,11 +439,11 @@ function konumlaCamileriBul() {
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:90];
+  const query = `[out:json][timeout:60];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
-    nwr["building"="mosque"](!"name")(area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
+    nwr["building"="mosque"]["name"!~"."](area.searchArea);
   );
   out center 3000;`;
 
@@ -436,7 +454,7 @@ function isimsizCamileriGetir(il) {
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:90];
+  const query = `[out:json][timeout:60];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
@@ -447,7 +465,7 @@ function tumCamileriGetir(il) {
   overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
 }
 
-// 🔍 CAMİ ARAMA (İl Seçimli veya Genel)
+// 🔍 CAMİ ARAMA
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
   const seciliIl = document.getElementById("il-arama").value;
@@ -458,7 +476,7 @@ function camiAra() {
   let baslik = "";
 
   if (seciliIl) {
-    query = `[out:json][timeout:90];
+    query = `[out:json][timeout:60];
     area["admin_level"="4"]["name"~"^${seciliIl}"]->.searchArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
@@ -467,7 +485,7 @@ function camiAra() {
     out center 3000;`;
     baslik = `${seciliIl} - "${isim}" araması`;
   } else {
-    query = `[out:json][timeout:90];
+    query = `[out:json][timeout:60];
     area["admin_level"="2"]["name"="Türkiye"]->.trArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
@@ -485,11 +503,21 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   const sayac = document.getElementById("sayac");
   sayac.innerHTML = `⏳ Veriler yükleniyor...`;
 
-  fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: query
-  })
-  .then(r => r.json())
+  const primaryUrl = "https://overpass-api.de/api/interpreter";
+  const fallbackUrl = "https://overpass.kumi.systems/api/interpreter";
+
+  const fetchData = (url) => {
+    return fetch(url, {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query)
+    }).then(r => {
+      if (!r.ok) throw new Error("Sunucu hatası");
+      return r.json();
+    });
+  };
+
+  fetchData(primaryUrl)
+  .catch(() => fetchData(fallbackUrl))
   .then(data => {
     const uniqueElements = [];
     const seenIds = new Set();
@@ -556,7 +584,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
     }
   })
   .catch(err => {
-    sayac.innerHTML = `❌ Sunucu yanıt vermedi veya zaman aşımı uğradı. Lütfen tekrar deneyin.`;
+    sayac.innerHTML = `❌ Sunucu yanıt vermedi. Lütfen tekrar deneyin.`;
   });
 }
 </script>
