@@ -491,3 +491,51 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
 </body>
 </html>
+<!-- seyfettin033 Canlı Katkı Kartı -->
+<div id="osm-stats-card" style="margin: 20px auto; max-width: 600px; padding: 18px 20px; background: #ffffff; border-radius: 12px; border-left: 6px solid #28a745; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-family: sans-serif;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h3 style="margin: 0 0 6px 0; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        🚀 seyfettin033 Canlı Katkı Panosu
+      </h3>
+      <p style="margin: 0; color: #64748b; font-size: 0.88rem;">OpenStreetMap Veri İyileştirme Katkısı</p>
+    </div>
+    <div style="text-align: right;">
+      <span id="osm-counter" style="display: block; font-size: 1.5rem; font-weight: bold; color: #28a745;">Yükleniyor...</span>
+      <span style="font-size: 0.75rem; color: #94a3b8; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Canlı Veri</span>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadOSMStats() {
+  const username = "seyfettin033";
+  const counterEl = document.getElementById("osm-counter");
+  const query = `
+    [out:json][timeout:25];
+    (
+      node(user:"${username}")["amenity"="place_of_worship"];
+      way(user:"${username}")["amenity"="place_of_worship"];
+      node(user:"${username}")["building"="mosque"];
+      way(user:"${username}")["building"="mosque"];
+    );
+    out count;
+  `;
+
+  try {
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query)
+    });
+    const data = await res.json();
+    const count = data.elements[0].tags.total;
+    counterEl.innerText = count + " Cami";
+  } catch (err) {
+    counterEl.innerText = "Bağlantı Bekliyor";
+  }
+}
+
+loadOSMStats();
+</script>
+
+
