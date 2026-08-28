@@ -125,6 +125,11 @@ select, input {
 }
 select:focus, input:focus { border-color: #78481d; }
 
+.search-box-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .search-box { display: flex; gap: 8px; }
 .search-box input { flex: 1; }
 
@@ -218,9 +223,14 @@ select:focus, input:focus { border-color: #78481d; }
   </div>
 
   <div id="group-arama" class="filter-group">
-    <div class="search-box">
-      <input type="text" id="cami-ismi" placeholder="Cami adı girin (Örn: Süleymaniye)" onkeyup="if(event.key==='Enter') camiAra()">
-      <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
+    <div class="search-box-group">
+      <select id="il-arama">
+        <option value="">Tüm Türkiye Geneli</option>
+      </select>
+      <div class="search-box">
+        <input type="text" id="cami-ismi" placeholder="Cami adı veya kelime girin (Örn: Süleymaniye, Hacı)" onkeyup="if(event.key==='Enter') camiAra()">
+        <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
+      </div>
     </div>
   </div>
 </div>
@@ -257,13 +267,13 @@ const iller = [
 
 const ilSelectIsimsiz = document.getElementById("il-isimsiz");
 const ilSelectTum = document.getElementById("il-tum");
+const ilSelectArama = document.getElementById("il-arama");
 
 iller.forEach((il, index) => {
   const plaka = (index + 1).toString().padStart(2, '0');
-  const option1 = new Option(`${plaka} - ${il}`, il);
-  const option2 = new Option(`${plaka} - ${il}`, il);
-  ilSelectIsimsiz.add(option1);
-  ilSelectTum.add(option2);
+  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
 });
 
 const map = L.map('map').setView([39, 35], 6);
@@ -321,7 +331,7 @@ function konumlaCamileriBul() {
         nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
         nwr["building"="mosque"](around:5000, ${lat}, ${lon});
       );
-      out center;`;
+      out center 1000;`;
 
       overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#78481d", false);
     },
@@ -337,13 +347,13 @@ function konumlaCamileriBul() {
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:60];
+  const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
     nwr["building"="mosque"](!"name")(area.searchArea);
   );
-  out center 500;`;
+  out center 3000;`;
 
   overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
 }
@@ -352,31 +362,50 @@ function isimsizCamileriGetir(il) {
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:60];
+  const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
     nwr["building"="mosque"](area.searchArea);
   );
-  out center 500;`;
+  out center 3000;`;
 
-  overpassSorgula(query, `${il} ilindeki camiler`, "#78481d");
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
 }
 
-// 🔍 CAMİ ARAMA
+// 🔍 CAMİ ARAMA (İl Seçimli veya Genel)
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
-  if (!isim) return alert("Bir isim girin.");
+  const seciliIl = document.getElementById("il-arama").value;
 
-  const query = `[out:json][timeout:45];
-  area["admin_level"="2"]["name"="Türkiye"]->.trArea;
-  (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
-    nwr["building"="mosque"]["name"~"${isim}",i](area.trArea);
-  );
-  out center 200;`;
+  if (!isim) return alert("Lütfen aranacak cami adını veya bir kelime girin.");
 
-  overpassSorgula(query, `"${isim}" araması`, "#78481d");
+  let query = "";
+  let baslik = "";
+
+  if (seciliIl) {
+    // Seçili İl Sınırlarında Arama
+    query = `[out:json][timeout:90];
+    area["admin_level"="4"]["name"~"^${seciliIl}"]->.searchArea;
+    (
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.searchArea);
+    );
+    out center 3000;`;
+    baslik = `${seciliIl} - "${isim}" araması`;
+  } else {
+    // Türkiye Genelinde Arama
+    query = `[out:json][timeout:90];
+    area["admin_level"="2"]["name"="Türkiye"]->.trArea;
+    (
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.trArea);
+    );
+    out center 2000;`;
+    baslik = `Türkiye geneli - "${isim}" araması`;
+  }
+
+  overpassSorgula(query, baslik, "#78481d");
 }
 
 function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
