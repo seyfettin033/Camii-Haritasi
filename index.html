@@ -1,30 +1,274 @@
-<!-- Üst Kontrol & İstatistik Paneli -->
-<div style="margin: 15px auto; max-width: 800px; font-family: sans-serif;">
-  
-  <!-- Canlı Sayac & Sağ Üst Saat Kartı -->
-  <div style="background: #ffffff; padding: 15px 20px; border-radius: 12px; border-left: 5px solid #28a745; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-    <div>
-      <h3 style="margin: 0 0 4px 0; color: #1e293b; font-size: 1.05rem;">🚀 seyfettin033 Canlı Katkı Panosu</h3>
-      <span id="osm-counter" style="font-size: 1.3rem; font-weight: bold; color: #28a745;">Yükleniyor...</span>
-    </div>
-    <div style="text-align: right; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-      <span id="live-clock" style="display: block; font-size: 1.1rem; font-weight: bold; color: #0f172a; font-family: monospace;">00:00:00</span>
-      <span style="font-size: 0.7rem; color: #64748b;">TSİ</span>
-    </div>
-  </div>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Kurtarılan Orijinal Tab/Menü Butonları -->
-  <div class="tab-menu" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
-    <button class="tab-btn" onclick="showTab('nearby')">📍 Yakınımdakiler</button>
-    <button class="tab-btn active" onclick="showTab('unnamed')">⚠️ İsimsiz Camiler</button>
-    <button class="tab-btn" onclick="showTab('all')">🕌 Tüm Camiler</button>
-    <button class="tab-btn" onclick="showTab('search')">🔍 Cami Ara</button>
-  </div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
+<style>
+* { box-sizing: border-box; }
+html, body { height:100%; margin:0; padding:0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #fcf8f2;
+  color: #4a3b32;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Section */
+header {
+  background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
+  color: #fcf8f2;
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
+}
+header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
+}
+.bayrak-img {
+  width: 28px;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+header small { 
+  color: #f3e5d8; 
+  opacity: 0.9;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  font-weight: 300;
+}
+
+/* Ayet Kutusu & Canlı Paneller */
+.ayet-box {
+  background: #f4ece1;
+  color: #5c3a21;
+  text-align: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2d2c0;
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+}
+.ayet-box strong {
+  color: #8c4a1b;
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.ayet-kaynak {
+  font-size: 11px;
+  color: #a05a2c;
+  font-weight: 600;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Canlı Sayaç ve Saat Şeridi */
+.live-info-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eae0d0;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5c3a21;
+  border-bottom: 1px solid #dcd0bd;
+}
+.live-info-strip .badge {
+  background: #78481d;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* Tablar */
+.tabs {
+  display: flex;
+  background: #eae0d0;
+  border-bottom: 2px solid #dcd0bd;
+  overflow-x: auto;
+}
+.tab-btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 12px 10px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  color: #7a6858;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.tab-btn.active {
+  background: #fcf8f2;
+  color: #78481d;
+  border-bottom: 3px solid #78481d;
+}
+
+/* Filtre Alanı */
+.filters {
+  padding: 14px;
+  background: #fcf8f2;
+  border-bottom: 1px solid #e8dccb;
+}
+.filter-group { display: none; }
+.filter-group.active { display: block; }
+
+select, input {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: 1.5px solid #d8c8b4;
+  background: #fffdfa;
+  color: #4a3b32;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+select:focus, input:focus { border-color: #78481d; }
+
+.search-box-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.search-box { display: flex; gap: 8px; }
+.search-box input { flex: 1; }
+
+.btn-action, .btn-location {
+  padding: 12px;
+  background: #78481d;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease;
+  box-shadow: 0 2px 6px rgba(120, 72, 29, 0.2);
+}
+.btn-action:hover, .btn-location:hover { background: #5a3413; }
+
+#sayac {
+  background: #f4ece1;
+  padding: 10px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #5c4232;
+  border-bottom: 1px solid #e4d7c5;
+}
+
+#map { flex: 1; width: 100%; min-height: 350px; }
+
+/* Harita Popup Özelleştirmesi */
+.popup { font-size: 13px; text-align: center; padding: 2px; }
+.popup b { color: #5a3413; display: block; margin-bottom: 2px; font-size: 14px; }
+.popup small { color: #8c7868; display: block; margin-bottom: 10px; }
+.popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.popup a {
+  display: block; text-align: center; padding: 7px 4px; border-radius: 6px;
+  text-decoration: none; font-weight: 600; font-size: 11px;
+  transition: opacity 0.2s;
+}
+.popup a:hover { opacity: 0.9; }
+
+.osm { background: #78481d; color: #fff; grid-column: span 2; }
+.google { background: #d9a74a; color: #fff; }
+.diyanet { background: #b84335; color: #fff; }
+.mapillary { background: #4a7c59; color: #fff; }
+.panoramax { background: #6b5b95; color: #fff; }
+.osm-note { background: #a83232; color: #fff; grid-column: span 2; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>
+    <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
+    Türkiye Camii Rehberi
+  </h1>
+  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
+</header>
+
+<!-- Canlı Katkı ve Saat Şeridi -->
+<div class="live-info-strip">
+  <div>🚀 <b>seyfettin033</b> Katkısı: <span id="osm-counter" class="badge">Yükleniyor...</span></div>
+  <div>🕒 <span id="live-clock" style="font-family: monospace; font-size: 13px;">00:00:00</span></div>
 </div>
 
+<div class="ayet-box">
+  <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
+  <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."</span>
+  <span id="ayet-sure" class="ayet-kaynak">(Tevbe Suresi, 18. Ayet)</span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
+  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
+</div>
+
+<div class="filters">
+  <div id="group-konum" class="filter-group active">
+    <button class="btn-location" onclick="konumlaCamileriBul()">
+      📍 Bulunduğum Konuma Göre Yakındaki Camileri Göster
+    </button>
+  </div>
+
+  <div id="group-isimsiz" class="filter-group">
+    <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
+      <option value="">Lütfen il seçiniz</option>
+    </select>
+  </div>
+
+  <div id="group-tum" class="filter-group">
+    <select id="il-tum" onchange="tumCamileriGetir(this.value)">
+      <option value="">Lütfen il seçiniz</option>
+    </select>
+  </div>
+
+  <div id="group-arama" class="filter-group">
+    <div class="search-box-group">
+      <select id="il-arama">
+        <option value="">Tüm Türkiye Geneli</option>
+      </select>
+      <div class="search-box">
+        <input type="text" id="cami-ismi" placeholder="Cami adı veya kelime girin (Örn: Süleymaniye, Hacı)" onkeyup="if(event.key==='Enter') camiAra()">
+        <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-// Saat Scripti
+// 🕒 Canlı Saat
 function updateClock() {
   const now = new Date();
   document.getElementById('live-clock').innerText = now.toLocaleTimeString('tr-TR', { hour12: false });
@@ -32,17 +276,269 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// OSM Katkı Sayacı Scripti
+// 🚀 OSM Katkı Sayacı
 async function loadOSMStats() {
   const counterEl = document.getElementById("osm-counter");
-  const query = `[out:json];(node(user:"seyfettin033")["amenity"="place_of_worship"];way(user:"seyfettin033")["amenity"="place_of_worship"];);out body 500;`;
+  const query = `[out:json][timeout:25];(node(user:"seyfettin033")["amenity"="place_of_worship"];way(user:"seyfettin033")["amenity"="place_of_worship"];);out center;`;
   try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(query) });
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query)
+    });
     const data = await res.json();
-    counterEl.innerText = (data.elements ? data.elements.length : 0) + " Cami İşlendi";
+    const count = data.elements ? data.elements.length : 0;
+    counterEl.innerText = count + " Cami";
   } catch (err) {
-    counterEl.innerText = "Canlı Katkı Aktif";
+    counterEl.innerText = "Aktif";
   }
 }
 loadOSMStats();
+
+const ayetler = [
+  { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
+  { metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.", sure: "(Ankebût Suresi, 45. Ayet)" },
+  { metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.", sure: "(Râd Suresi, 28. Ayet)" }
+];
+
+function ayetGetir() {
+  const r = ayetler[Math.floor(Math.random() * ayetler.length)];
+  document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
+  document.getElementById("ayet-sure").innerText = r.sure;
+}
+ayetGetir();
+
+const iller = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+];
+
+const ilSelectIsimsiz = document.getElementById("il-isimsiz");
+const ilSelectTum = document.getElementById("il-tum");
+const ilSelectArama = document.getElementById("il-arama");
+
+iller.forEach((il, index) => {
+  const plaka = (index + 1).toString().padStart(2, '0');
+  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
+});
+
+const map = L.map('map').setView([39, 35], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+const layer = L.layerGroup().addTo(map);
+
+function switchTab(mode) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
+  layer.clearLayers();
+
+  if (mode === 'konum') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('group-konum').classList.add('active');
+  } else if (mode === 'isimsiz') {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('group-isimsiz').classList.add('active');
+  } else if (mode === 'tum') {
+    document.querySelectorAll('.tab-btn')[2].classList.add('active');
+    document.getElementById('group-tum').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    document.getElementById('group-arama').classList.add('active');
+  }
+}
+
+// 📍 KONUM BULMA
+function konumlaCamileriBul() {
+  const sayac = document.getElementById("sayac");
+
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    alert("Konum özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir.");
+    sayac.innerHTML = "❌ Güvenli bağlantı (HTTPS) gerekli.";
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert("Tarayıcınız konum özelliğini desteklemiyor.");
+    return;
+  }
+
+  sayac.innerHTML = "📡 Konumunuz tespit ediliyor...";
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      layer.clearLayers();
+      L.marker([lat, lon]).addTo(layer).bindPopup("<b>📍 Buradasınız</b>").openPopup();
+      map.setView([lat, lon], 14);
+
+      const query = `[out:json][timeout:30];
+      (
+        nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
+        nwr["building"="mosque"](around:5000, ${lat}, ${lon});
+      );
+      out center 1000;`;
+
+      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#78481d", false);
+    },
+    (err) => {
+      sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
+      alert("Konum izni verilmedi veya cihaz konumu kapalı.");
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+// ⚠️ İSİMSİZ CAMİLER
+function isimsizCamileriGetir(il) {
+  if (!il) return;
+
+  const query = `[out:json][timeout:90];
+  area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
+  (
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
+    nwr["building"="mosque"](!"name")(area.searchArea);
+  );
+  out center 3000;`;
+
+  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
+}
+
+// 🕌 TÜM CAMİLER
+function tumCamileriGetir(il) {
+  if (!il) return;
+
+  const query = `[out:json][timeout:90];
+  area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
+  (
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+    nwr["building"="mosque"](area.searchArea);
+  );
+  out center 3000;`;
+
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
+}
+
+// 🔍 CAMİ ARAMA (İl Seçimli veya Genel)
+function camiAra() {
+  const isim = document.getElementById("cami-ismi").value.trim();
+  const seciliIl = document.getElementById("il-arama").value;
+
+  if (!isim) return alert("Lütfen aranacak cami adını veya bir kelime girin.");
+
+  let query = "";
+  let baslik = "";
+
+  if (seciliIl) {
+    query = `[out:json][timeout:90];
+    area["admin_level"="4"]["name"~"^${seciliIl}"]->.searchArea;
+    (
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.searchArea);
+    );
+    out center 3000;`;
+    baslik = `${seciliIl} - "${isim}" araması`;
+  } else {
+    query = `[out:json][timeout:90];
+    area["admin_level"="2"]["name"="Türkiye"]->.trArea;
+    (
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.trArea);
+    );
+    out center 2000;`;
+    baslik = `Türkiye geneli - "${isim}" araması`;
+  }
+
+  overpassSorgula(query, baslik, "#78481d");
+}
+
+function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
+  if (temizle) layer.clearLayers();
+  const sayac = document.getElementById("sayac");
+  sayac.innerHTML = `⏳ Veriler yükleniyor...`;
+
+  fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: query
+  })
+  .then(r => r.json())
+  .then(data => {
+    const uniqueElements = [];
+    const seenIds = new Set();
+
+    data.elements.forEach(el => {
+      const uniqueKey = `${el.type}/${el.id}`;
+      if (!seenIds.has(uniqueKey)) {
+        seenIds.add(uniqueKey);
+
+        const name = (el.tags && el.tags.name) ? el.tags.name.toLowerCase() : "";
+        const isOtherWorship = name.includes("kilise") || name.includes("church") || name.includes("havra") || name.includes("sinagog") || name.includes("synagogue");
+        
+        if (!isOtherWorship) {
+          uniqueElements.push(el);
+        }
+      }
+    });
+
+    const adet = uniqueElements.length;
+
+    if (adet === 0) {
+      sayac.innerHTML = `❌ ${baslikMetni} için sonuç bulunamadı.`;
+      return;
+    }
+
+    sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
+
+    const bounds = [];
+    uniqueElements.forEach(el => {
+      const lat = el.lat || (el.center && el.center.lat);
+      const lon = el.lon || (el.center && el.center.lon);
+      
+      if (!lat || !lon) return;
+
+      const camiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
+
+      bounds.push([lat, lon]);
+
+      const popup = `
+      <div class="popup">
+        <b>${camiAdi}</b>
+        <small>ID: ${el.type}/${el.id}</small>
+        <div class="popup-links">
+          <a class="google" target="_blank" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
+          <a class="diyanet" target="_blank" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
+          <a class="mapillary" target="_blank" href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">📸 Mapillary</a>
+          <a class="panoramax" target="_blank" href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">📷 Panoramax</a>
+          <a class="osm" target="_blank" href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">✍️ OSM'de Düzenle</a>
+          <a class="osm-note" target="_blank" href="https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}">🚨 Not Ekle</a>
+        </div>
+      </div>`;
+
+      L.circleMarker([lat, lon], {
+        radius: 6.5,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: noktaRengi,
+        fillOpacity: 0.95
+      }).addTo(layer).bindPopup(popup);
+    });
+
+    if (bounds.length > 0 && temizle) {
+      map.fitBounds(bounds, { padding: [30, 30] });
+    }
+  })
+  .catch(err => {
+    sayac.innerHTML = `❌ Sunucu yanıt vermedi veya zaman aşımı uğradı. Lütfen tekrar deneyin.`;
+  });
+}
 </script>
+
+</body>
+</html>
