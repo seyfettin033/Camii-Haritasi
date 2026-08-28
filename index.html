@@ -51,34 +51,7 @@ header small {
   font-weight: 300;
 }
 
-/* Ayet Kutusu & Canlı Paneller */
-.ayet-box {
-  background: #f4ece1;
-  color: #5c3a21;
-  text-align: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid #e2d2c0;
-  font-size: 13px;
-  line-height: 1.5;
-  position: relative;
-}
-.ayet-box strong {
-  color: #8c4a1b;
-  display: block;
-  margin-bottom: 3px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.ayet-kaynak {
-  font-size: 11px;
-  color: #a05a2c;
-  font-weight: 600;
-  margin-top: 4px;
-  display: block;
-}
-
-/* Canlı Sayaç ve Saat Şeridi */
+/* Canlı Katkı ve Saat Şeridi */
 .live-info-strip {
   display: flex;
   justify-content: space-between;
@@ -96,6 +69,32 @@ header small {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 11px;
+}
+
+/* Ayet Kutusu */
+.ayet-box {
+  background: #f4ece1;
+  color: #5c3a21;
+  text-align: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2d2c0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ayet-box strong {
+  color: #8c4a1b;
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.ayet-kaynak {
+  font-size: 11px;
+  color: #a05a2c;
+  font-weight: 600;
+  margin-top: 4px;
+  display: block;
 }
 
 /* Tablar */
@@ -168,15 +167,34 @@ select:focus, input:focus { border-color: #78481d; }
 }
 .btn-action:hover, .btn-location:hover { background: #5a3413; }
 
-#sayac {
+/* Sayaç & Yenile Barı */
+.sayac-wrapper {
   background: #f4ece1;
-  padding: 10px;
-  text-align: center;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid #e4d7c5;
+}
+#sayac {
   font-size: 13.5px;
   font-weight: 600;
   color: #5c4232;
-  border-bottom: 1px solid #e4d7c5;
 }
+.btn-refresh {
+  background: #78481d;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.btn-refresh:hover { background: #5a3413; }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
@@ -211,7 +229,6 @@ select:focus, input:focus { border-color: #78481d; }
   <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
 </header>
 
-<!-- Canlı Katkı ve Saat Şeridi -->
 <div class="live-info-strip">
   <div>🚀 <b>seyfettin033</b> Katkısı: <span id="osm-counter" class="badge">Yükleniyor...</span></div>
   <div>🕒 <span id="live-clock" style="font-family: monospace; font-size: 13px;">00:00:00</span></div>
@@ -262,7 +279,11 @@ select:focus, input:focus { border-color: #78481d; }
   </div>
 </div>
 
-<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
+<div class="sayac-wrapper">
+  <div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
+  <button class="btn-refresh" onclick="location.reload()">🔄 Yenile</button>
+</div>
+
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
