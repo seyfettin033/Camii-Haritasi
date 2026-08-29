@@ -40,48 +40,58 @@ header {
   transform: scale(1.03);
 }
 
-/* Üst Yenile Barı */
-.top-refresh-bar {
-  background: #643914;
-  padding: 6px 10px;
-  text-align: center;
-  border-bottom: 1px solid #4a2c11;
-}
-.btn-top-refresh {
+
+  <!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+* { box-sizing: border-box; }
+html, body { height:100%; margin:0; padding:0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: #fcf8f2;
-  color: #5a3413;
-  border: none;
-  padding: 5px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: all 0.2s ease;
-}
-.btn-top-refresh:hover {
-  background: #eae0d0;
-  transform: scale(1.03);
+  color: #4a3b32;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Canlı Katkı ve Saat Şeridi */
-.live-info-strip {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #eae0d0;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #5c3a21;
-  border-bottom: 1px solid #dcd0bd;
+/* Header Section */
+header {
+  background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
+  color: #fcf8f2;
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
 }
-.live-info-strip .badge {
-  background: #78481d;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
+header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
+}
+.bayrak-img {
+  width: 28px;
+  height: auto;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+header small { 
+  color: #f3e5d8; 
+  opacity: 0.9;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  font-weight: 300;
 }
 
 /* Ayet Kutusu */
@@ -216,19 +226,12 @@ select:focus, input:focus { border-color: #78481d; }
 <body>
 
 <header>
-  <!-- ImgBB Üzerindeki Amblem Logonuz -->
-  <img src="https://i.ibb.co/CKLR7tfh/547-E91-A2-D53-C-44-F3-8-E05-DF78486-D2438.png" alt="Türkiye Camii Rehberi" class="site-logo">
+  <h1>
+    <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
+    Türkiye Camii Rehberi
+  </h1>
+  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
 </header>
-
-<div class="top-refresh-bar">
-  <button class="btn-top-refresh" onclick="sorguyuSifirla()">🔄 Sorguyu Yenile</button>
-</div>
-
-<!-- Canlı Katkı ve Saat Şeridi -->
-<div class="live-info-strip">
-  <div>🚀 <b>seyfettin033</b> Katkısı: <span id="osm-counter" class="badge">Yükleniyor...</span></div>
-  <div>🕒 <span id="live-clock" style="font-family: monospace; font-size: 13px;">00:00:00</span></div>
-</div>
 
 <div class="ayet-box">
   <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
@@ -281,32 +284,6 @@ select:focus, input:focus { border-color: #78481d; }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// 🕒 Canlı Saat
-function updateClock() {
-  const now = new Date();
-  document.getElementById('live-clock').innerText = now.toLocaleTimeString('tr-TR', { hour12: false });
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// 🚀 OSM Katkı Sayacı
-async function loadOSMStats() {
-  const counterEl = document.getElementById("osm-counter");
-  const query = `[out:json][timeout:25];(node(user:"seyfettin033")["amenity"="place_of_worship"];way(user:"seyfettin033")["amenity"="place_of_worship"];);out center;`;
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: "data=" + encodeURIComponent(query)
-    });
-    const data = await res.json();
-    const count = data.elements ? data.elements.length : 0;
-    counterEl.innerText = count + " Cami";
-  } catch (err) {
-    counterEl.innerText = "Aktif";
-  }
-}
-loadOSMStats();
-
 const ayetler = [
   { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
   { metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.", sure: "(Ankebût Suresi, 45. Ayet)" },
@@ -345,17 +322,6 @@ iller.forEach((il, index) => {
 const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 const layer = L.layerGroup().addTo(map);
-
-// Sorgu Sıfırlama
-function sorguyuSifirla() {
-  layer.clearLayers();
-  map.setView([39, 35], 6);
-  document.getElementById("il-isimsiz").value = "";
-  document.getElementById("il-tum").value = "";
-  document.getElementById("il-arama").value = "";
-  document.getElementById("cami-ismi").value = "";
-  document.getElementById("sayac").innerHTML = "Sorgu sıfırlandı. Yeni bir seçim yapabilirsiniz.";
-}
 
 function switchTab(mode) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -424,11 +390,11 @@ function konumlaCamileriBul() {
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:60];
+  const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"][!name](area.searchArea);
-    nwr["building"="mosque"][!name](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
+    nwr["building"="mosque"](!"name")(area.searchArea);
   );
   out center 3000;`;
 
@@ -439,7 +405,7 @@ function isimsizCamileriGetir(il) {
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:60];
+  const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
@@ -450,7 +416,7 @@ function tumCamileriGetir(il) {
   overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
 }
 
-// 🔍 CAMİ ARAMA
+// 🔍 CAMİ ARAMA (İl Seçimli veya Genel)
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
   const seciliIl = document.getElementById("il-arama").value;
@@ -461,7 +427,8 @@ function camiAra() {
   let baslik = "";
 
   if (seciliIl) {
-    query = `[out:json][timeout:60];
+    // Seçili İl Sınırlarında Arama
+    query = `[out:json][timeout:90];
     area["admin_level"="4"]["name"~"^${seciliIl}"]->.searchArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
@@ -470,7 +437,8 @@ function camiAra() {
     out center 3000;`;
     baslik = `${seciliIl} - "${isim}" araması`;
   } else {
-    query = `[out:json][timeout:60];
+    // Türkiye Genelinde Arama
+    query = `[out:json][timeout:90];
     area["admin_level"="2"]["name"="Türkiye"]->.trArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
@@ -488,21 +456,11 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   const sayac = document.getElementById("sayac");
   sayac.innerHTML = `⏳ Veriler yükleniyor...`;
 
-  const primaryUrl = "https://overpass-api.de/api/interpreter";
-  const fallbackUrl = "https://overpass.kumi.systems/api/interpreter";
-
-  const fetchData = (url) => {
-    return fetch(url, {
-      method: "POST",
-      body: "data=" + encodeURIComponent(query)
-    }).then(r => {
-      if (!r.ok) throw new Error("Sunucu hatası");
-      return r.json();
-    });
-  };
-
-  fetchData(primaryUrl)
-  .catch(() => fetchData(fallbackUrl))
+  fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: query
+  })
+  .then(r => r.json())
   .then(data => {
     const uniqueElements = [];
     const seenIds = new Set();
@@ -576,3 +534,9 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
 </body>
 </html>
+
+
+
+
+
+
