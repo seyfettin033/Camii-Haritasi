@@ -18,40 +18,24 @@ body {
   flex-direction: column;
 }
 
-/* Header Section */
+/* Header & Amblem Logo */
 header {
   background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
-  color: #fcf8f2;
-  padding: 16px 12px;
+  padding: 14px 12px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
 }
-header h1 {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  letter-spacing: 0.5px;
-}
-.bayrak-img {
-  width: 28px;
+
+.site-logo {
+  max-width: 240px;
+  width: 100%;
   height: auto;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-header small { 
-  color: #f3e5d8; 
-  opacity: 0.9;
-  font-size: 12px;
-  margin-top: 4px;
   display: block;
-  font-weight: 300;
+  margin: 0 auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
 }
 
-/* Tam Üst Ortaya Eklenen Yenile Barı */
+/* Üst Yenile Barı */
 .top-refresh-bar {
   background: #643914;
   padding: 6px 10px;
@@ -227,18 +211,19 @@ select:focus, input:focus { border-color: #78481d; }
 <body>
 
 <header>
-  <h1>
-    <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
-    Türkiye Camii Rehberi
-  </h1>
-  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
+  <!-- Doğrudan ImgBB Amblem Logo Bağlantısı -->
+  <img src="https://i.ibb.co/CKLR7tfh/547-E91-A2-D53-C-44-F3-8-E05-DF78486-D2438.png" alt="Türkiye Camii Rehberi" class="site-logo">
 </header>
 
-<!-- Üst Orta Sorgu Yenileme Butonu -->
 <div class="top-refresh-bar">
   <button class="btn-top-refresh" onclick="sorguyuSifirla()">🔄 Sorguyu Yenile</button>
 </div>
 
+<!-- Canlı Katkı ve Saat Şeridi -->
+<div class="live-info-strip">
+  <div>🚀 <b>seyfettin033</b> Katkısı: <span id="osm-counter" class="badge">Yükleniyor...</span></div>
+  <div>🕒 <span id="live-clock" style="font-family: monospace; font-size: 13px;">00:00:00</span></div>
+</div>
 
 <div class="ayet-box">
   <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
@@ -300,7 +285,23 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-
+// 🚀 OSM Katkı Sayacı
+async function loadOSMStats() {
+  const counterEl = document.getElementById("osm-counter");
+  const query = `[out:json][timeout:25];(node(user:"seyfettin033")["amenity"="place_of_worship"];way(user:"seyfettin033")["amenity"="place_of_worship"];);out center;`;
+  try {
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query)
+    });
+    const data = await res.json();
+    const count = data.elements ? data.elements.length : 0;
+    counterEl.innerText = count + " Cami";
+  } catch (err) {
+    counterEl.innerText = "Aktif";
+  }
+}
+loadOSMStats();
 
 const ayetler = [
   { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
@@ -422,8 +423,8 @@ function isimsizCamileriGetir(il) {
   const query = `[out:json][timeout:60];
   area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
-    nwr["building"="mosque"]["name"!~"."](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"][!name](area.searchArea);
+    nwr["building"="mosque"][!name](area.searchArea);
   );
   out center 3000;`;
 
