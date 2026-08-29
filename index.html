@@ -304,23 +304,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// 🚀 OSM Katkı Sayacı
-async function loadOSMStats() {
-  const counterEl = document.getElementById("osm-counter");
-  const query = `[out:json][timeout:25];(node(user:"seyfettin033")["amenity"="place_of_worship"];way(user:"seyfettin033")["amenity"="place_of_worship"];);out center;`;
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: "data=" + encodeURIComponent(query)
-    });
-    const data = await res.json();
-    const count = data.elements ? data.elements.length : 0;
-    counterEl.innerText = count + " Cami";
-  } catch (err) {
-    counterEl.innerText = "Aktif";
-  }
-}
-loadOSMStats();
+
 
 const ayetler = [
   { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
