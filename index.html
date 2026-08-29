@@ -18,21 +18,26 @@ body {
   flex-direction: column;
 }
 
-/* Header & Amblem Logo */
+/* Header & Küçültülmüş Amblem Logo */
 header {
   background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
-  padding: 14px 12px;
+  padding: 10px 12px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
 }
 
 .site-logo {
-  max-width: 240px;
+  max-width: 140px; /* Logo boyutu küçültüldü */
   width: 100%;
   height: auto;
   display: block;
   margin: 0 auto;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+  transition: transform 0.2s ease;
+}
+
+.site-logo:hover {
+  transform: scale(1.03);
 }
 
 /* Üst Yenile Barı */
@@ -211,7 +216,7 @@ select:focus, input:focus { border-color: #78481d; }
 <body>
 
 <header>
-  <!-- Doğrudan ImgBB Amblem Logo Bağlantısı -->
+  <!-- Doğrudan ImgBB Amblem Logo Bağlantısı (Küçültülmüş) -->
   <img src="https://i.ibb.co/CKLR7tfh/547-E91-A2-D53-C-44-F3-8-E05-DF78486-D2438.png" alt="Türkiye Camii Rehberi" class="site-logo">
 </header>
 
