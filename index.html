@@ -12,77 +12,95 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
 <style>
+:root {
+  --zumrut-koyu: #0A3225;
+  --zumrut-orta: #124E3F;
+  --zumrut-acik: #1E6B56;
+  --gold-parlak: #D4AF37;
+  --gold-soft: #AA771C;
+  --gold-arka: #FDFBF7;
+  --krem-bg: #F4F1EA;
+  --metin-koyu: #1C2B26;
+}
+
 * { box-sizing: border-box; }
 html, body { height:100%; margin:0; padding:0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: #fcf8f2;
-  color: #4a3b32;
+  background: var(--krem-bg);
+  color: var(--metin-koyu);
   display: flex;
   flex-direction: column;
 }
 
 header {
-  background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
-  color: #fcf8f2;
-  padding: 16px 12px;
+  background: linear-gradient(135deg, var(--zumrut-koyu) 0%, var(--zumrut-orta) 100%);
+  color: #ffffff;
+  padding: 18px 12px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
+  box-shadow: 0 4px 15px rgba(10, 50, 37, 0.4);
+  border-bottom: 3px solid var(--gold-parlak);
+  position: relative;
 }
 header h1 {
   margin: 0;
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .bayrak-img {
   width: 28px;
   height: auto;
   border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 1px solid var(--gold-parlak);
 }
 header small { 
-  color: #f3e5d8; 
-  opacity: 0.9;
-  font-size: 12px;
-  margin-top: 4px;
+  color: var(--gold-parlak); 
+  font-size: 12.5px;
+  margin-top: 5px;
   display: block;
-  font-weight: 300;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .ayet-box {
-  background: #f4ece1;
-  color: #5c3a21;
+  background: var(--zumrut-koyu);
+  color: #E8F0EC;
   text-align: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid #e2d2c0;
-  font-size: 13px;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--gold-parlak);
+  font-size: 13.5px;
   line-height: 1.5;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
 }
 .ayet-box strong {
-  color: #8c4a1b;
+  color: var(--gold-parlak);
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   font-size: 11px;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 .ayet-kaynak {
-  font-size: 11px;
-  color: #a05a2c;
+  font-size: 11.5px;
+  color: var(--gold-parlak);
   font-weight: 600;
   margin-top: 4px;
   display: block;
+  opacity: 0.9;
 }
 
 .tabs {
   display: flex;
-  background: #eae0d0;
-  border-bottom: 2px solid #dcd0bd;
+  background: var(--zumrut-orta);
+  border-bottom: 2px solid var(--gold-parlak);
   overflow-x: auto;
 }
 .tab-btn {
@@ -94,20 +112,21 @@ header small {
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  color: #7a6858;
+  color: #C8DCCE;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
 .tab-btn.active {
-  background: #fcf8f2;
-  color: #78481d;
-  border-bottom: 3px solid #78481d;
+  background: var(--krem-bg);
+  color: var(--zumrut-koyu);
+  border-bottom: 4px solid var(--gold-parlak);
+  font-weight: 700;
 }
 
 .filters {
   padding: 14px;
-  background: #fcf8f2;
-  border-bottom: 1px solid #e8dccb;
+  background: var(--gold-arka);
+  border-bottom: 1px solid #E2D9C8;
 }
 .filter-group { display: none; }
 .filter-group.active { display: block; }
@@ -116,14 +135,17 @@ select, input {
   width: 100%;
   padding: 11px;
   border-radius: 8px;
-  border: 1.5px solid #d8c8b4;
-  background: #fffdfa;
-  color: #4a3b32;
+  border: 1.5px solid #CFC2A9;
+  background: #ffffff;
+  color: var(--metin-koyu);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
-select:focus, input:focus { border-color: #78481d; }
+select:focus, input:focus { 
+  border-color: var(--gold-soft);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+}
 
 .search-box-group {
   display: flex;
@@ -135,47 +157,62 @@ select:focus, input:focus { border-color: #78481d; }
 
 .btn-action, .btn-location {
   padding: 12px;
-  background: #78481d;
-  color: #ffffff;
-  border: none;
+  background: linear-gradient(135deg, var(--zumrut-orta) 0%, var(--zumrut-koyu) 100%);
+  color: var(--gold-parlak);
+  border: 1px solid var(--gold-parlak);
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s ease;
-  box-shadow: 0 2px 6px rgba(120, 72, 29, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(10, 50, 37, 0.25);
 }
-.btn-action:hover, .btn-location:hover { background: #5a3413; }
+.btn-action:hover, .btn-location:hover { 
+  background: linear-gradient(135deg, var(--zumrut-acik) 0%, var(--zumrut-orta) 100%);
+  color: #ffffff;
+}
 
 #sayac {
-  background: #f4ece1;
+  background: #EAE3D2;
   padding: 10px;
   text-align: center;
   font-size: 13.5px;
   font-weight: 600;
-  color: #5c4232;
-  border-bottom: 1px solid #e4d7c5;
+  color: var(--zumrut-koyu);
+  border-bottom: 1px solid #D8CCB5;
 }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
-.popup { font-size: 13px; text-align: center; padding: 2px; }
-.popup b { color: #5a3413; display: block; margin-bottom: 2px; font-size: 14px; }
-.popup small { color: #8c7868; display: block; margin-bottom: 10px; }
+/* Custom Marker Cluster Styling (Gold/Emerald) */
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+  background-color: rgba(18, 78, 63, 0.6) !important;
+}
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+  background-color: var(--zumrut-koyu) !important;
+  color: var(--gold-parlak) !important;
+  font-weight: bold;
+  border: 1px solid var(--gold-parlak);
+}
+
+.popup { font-size: 13px; text-align: center; padding: 4px; }
+.popup b { color: var(--zumrut-koyu); display: block; margin-bottom: 3px; font-size: 14.5px; }
+.popup small { color: #5C6B64; display: block; margin-bottom: 10px; }
 .popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 .popup a {
   display: block; text-align: center; padding: 7px 4px; border-radius: 6px;
   text-decoration: none; font-weight: 600; font-size: 11px;
   transition: opacity 0.2s;
+  color: #fff;
 }
-.popup a:hover { opacity: 0.9; }
+.popup a:hover { opacity: 0.88; }
 
-.osm { background: #78481d; color: #fff; grid-column: span 2; }
-.google { background: #d9a74a; color: #fff; }
-.diyanet { background: #b84335; color: #fff; }
-.mapillary { background: #4a7c59; color: #fff; }
-.panoramax { background: #6b5b95; color: #fff; }
-.osm-note { background: #a83232; color: #fff; grid-column: span 2; }
+.osm { background: var(--zumrut-koyu); border: 1px solid var(--gold-parlak); grid-column: span 2; }
+.google { background: #D4AF37; color: #1C2B26 !important; }
+.diyanet { background: #9E2A2B; }
+.mapillary { background: #2A6F97; }
+.panoramax { background: #6A4C93; }
+.osm-note { background: #B23A48; grid-column: span 2; }
 </style>
 </head>
 
@@ -223,7 +260,7 @@ select:focus, input:focus { border-color: #78481d; }
   </div>
 
   <div id="group-arama" class="filter-group">
-    <div class="search-box-group">
+    <form onsubmit="event.preventDefault(); camiAra();" class="search-box-group">
       <select id="il-arama">
         <option value="">Tüm Türkiye Geneli</option>
       </select>
@@ -233,11 +270,10 @@ select:focus, input:focus { border-color: #78481d; }
           type="text"
           id="cami-ismi"
           placeholder="Cami adı veya kelime girin (Örn: Süleymaniye, Hacı)"
-          onkeyup="if(event.key==='Enter') camiAra()"
         >
-        <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
+        <button type="submit" class="btn-action" style="width:auto;">Ara</button>
       </div>
-    </div>
+    </form>
   </div>
 
 </div>
@@ -248,7 +284,7 @@ select:focus, input:focus { border-color: #78481d; }
 
 <!-- Leaflet & MarkerCluster JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
 
 <script>
 
@@ -303,7 +339,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap katkıda bulunanlar'
 }).addTo(map);
 
-/* Yüksek miktarda veriyi kasmadan yönetmek için MarkerClusterGroup kullanıyoruz */
 const clusterGroup = L.markerClusterGroup({
   chunkedLoading: true,
   maxClusterRadius: 50
@@ -369,7 +404,6 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
-      /* maxsize eklendi */
       const query = `[out:json][timeout:90][maxsize:1073741824];
       (
         nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
@@ -377,7 +411,7 @@ function konumlaCamileriBul() {
       );
       out center;`;
 
-      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#78481d", false);
+      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#124E3F", false);
     },
     (err) => {
       sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
@@ -387,27 +421,26 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER */
+/* ⚠️ İSİMSİZ CAMİLER (Hata Düzeltildi) */
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
-  /* Esnek il arama ve maxsize eklendi */
+  // ÇÖZÜM: ["name"!~"."] ile ismi olmayan (name etiketi tanımlanmamış) elemanları sorguluyoruz.
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"^$"](area.searchArea);
-    nwr["building"="mosque"]["name"~"^$"](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
+    nwr["building"="mosque"]["name"!~"."](area.searchArea);
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
+  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#B23A48");
 }
 
 /* 🕌 TÜM CAMİLER */
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  /* Esnek il arama ve maxsize eklendi */
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
@@ -416,7 +449,7 @@ function tumCamileriGetir(il) {
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#124E3F");
 }
 
 /* 🔍 CAMİ ARAMA */
@@ -426,6 +459,10 @@ function camiAra() {
 
   if (!isim) {
     return alert("Lütfen aranacak cami adını veya bir kelime girin.");
+  }
+
+  if (!seciliIl && isim.length < 3) {
+    return alert("Türkiye geneli aramalarda lütfen en az 3 karakter girin.");
   }
 
   const guvenliIsim = isim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -452,11 +489,11 @@ function camiAra() {
     baslik = `Türkiye geneli - "${isim}" araması`;
   }
 
-  overpassSorgula(query, baslik, "#78481d");
+  overpassSorgula(query, baslik, "#124E3F");
 }
 
 /* 🚀 OVERPASS SORGU */
-function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
+function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle = true) {
   if (temizle) {
     clusterGroup.clearLayers();
   }
@@ -507,8 +544,12 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
       if (lat === undefined || lon === undefined) return;
 
-      const hamCamiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
+      const hasName = el.tags && el.tags.name;
+      const hamCamiAdi = hasName ? el.tags.name : "❗ İsimsiz Cami";
       const guvenliCamiAdi = escapeHtml(hamCamiAdi);
+
+      // İsimsiz camiler her zaman belirgin kırmızı/bordo renkte vurgulanır
+      const noktaRengi = hasName ? varsayilanNoktaRengi : "#B23A48";
 
       bounds.push([lat, lon]);
 
@@ -528,8 +569,8 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
       const m = L.circleMarker([lat, lon], {
         radius: 6.5,
-        color: "#ffffff",
-        weight: 2,
+        color: "#D4AF37", // Altın varaklı dış çizgi
+        weight: 1.5,
         fillColor: noktaRengi,
         fillOpacity: 0.95
       }).bindPopup(popup);
@@ -537,7 +578,6 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
       markers.push(m);
     });
 
-    /* Tüm markerlar tek seferde cluster grubuna verilir */
     clusterGroup.addLayers(markers);
 
     if (bounds.length > 0 && temizle) {
