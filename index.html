@@ -152,9 +152,6 @@ select, input {
 }
 .osm { background: #0d382d; grid-column: span 2; border: 1px solid #d4af37; }
 .google { background: #d9a74a; }
-.diyanet { background: #b84335; }
-.mapillary { background: #4a7c59; }
-.panoramax { background: #6b5b95; }
 </style>
 </head>
 
@@ -228,10 +225,8 @@ select, input {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-
 let mevcutCamiVerileri = [];
 
-// 81 İlin Plaka Kodu ve Adı
 const iller = [
   { plaka: "01", ad: "Adana" }, { plaka: "02", ad: "Adıyaman" }, { plaka: "03", ad: "Afyonkarahisar" },
   { plaka: "04", ad: "Ağrı" }, { plaka: "05", ad: "Amasya" }, { plaka: "06", ad: "Ankara" },
@@ -262,15 +257,18 @@ const iller = [
   { plaka: "79", ad: "Kilis" }, { plaka: "80", ad: "Osmaniye" }, { plaka: "81", ad: "Düzce" }
 ];
 
-const ilSelectIsimsiz = document.getElementById("il-isimsiz");
-const ilSelectTum = document.getElementById("il-tum");
-const ilSelectArama = document.getElementById("il-arama");
+// Sayfa yüklendiğinde açılır listeleri kesin dolduran fonksiyon
+document.addEventListener("DOMContentLoaded", function() {
+  const ilSelectIsimsiz = document.getElementById("il-isimsiz");
+  const ilSelectTum = document.getElementById("il-tum");
+  const ilSelectArama = document.getElementById("il-arama");
 
-iller.forEach((il) => {
-  const etiket = `${il.plaka} - ${il.ad}`;
-  ilSelectIsimsiz.add(new Option(etiket, il.plaka));
-  ilSelectTum.add(new Option(etiket, il.plaka));
-  ilSelectArama.add(new Option(etiket, il.plaka));
+  iller.forEach((il) => {
+    const etiket = `${il.plaka} - ${il.ad}`;
+    if (ilSelectIsimsiz) ilSelectIsimsiz.add(new Option(etiket, il.plaka));
+    if (ilSelectTum) ilSelectTum.add(new Option(etiket, il.plaka));
+    if (ilSelectArama) ilSelectArama.add(new Option(etiket, il.plaka));
+  });
 });
 
 const map = L.map('map').setView([39.0, 35.0], 6);
@@ -347,14 +345,13 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER (PLAKA KODUNA GÖRE KESİN SORGULAMA) */
+/* ⚠️ İSİMSİZ CAMİLER */
 function isimsizCamileriGetir(plakaNo) {
   if (!plakaNo) return;
 
   const ilObj = iller.find(i => i.plaka === plakaNo);
   const ilAdi = ilObj ? ilObj.ad : plakaNo;
 
-  // ISO3166-2:TR plaka kodu eşleştirmesi
   const query = `[out:json][timeout:90];
   area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
   (
@@ -368,14 +365,13 @@ function isimsizCamileriGetir(plakaNo) {
   overpassSorgula(query, `${plakaNo} - ${ilAdi} ilindeki isimsiz camiler`, "#e74c3c");
 }
 
-/* 🕌 TÜM CAMİLER (PLAKA KODUNA GÖRE KESİN SORGULAMA) */
+/* 🕌 TÜM CAMİLER */
 function tumCamileriGetir(plakaNo) {
   if (!plakaNo) return;
 
   const ilObj = iller.find(i => i.plaka === plakaNo);
   const ilAdi = ilObj ? ilObj.ad : plakaNo;
 
-  // ISO3166-2:TR plaka kodu eşleştirmesi
   const query = `[out:json][timeout:90];
   area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
   (
@@ -398,9 +394,6 @@ function camiAra() {
 
   let query = "";
   if (plakaNo) {
-    const ilObj = iller.find(i => i.plaka === plakaNo);
-    const ilAdi = ilObj ? ilObj.ad : plakaNo;
-    
     query = `[out:json][timeout:60];
     area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
     (
@@ -417,7 +410,7 @@ function camiAra() {
       node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.tr);
       way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.tr);
       node["building"="mosque"]["name"~"${isim}",i](area.tr);
-      way["building"="mosque"]["name"~"${isim}",tr];
+      way["building"="mosque"]["name"~"${isim}",i](area.tr);
     );
     out center;`;
   }
@@ -425,7 +418,7 @@ function camiAra() {
   overpassSorgula(query, `"${isim}" Arama Sonuçları`, "#d4af37");
 }
 
-/* 🚀 OVERPASS İŞLEME SÜRECİ */
+/* 🚀 OVERPASS SORGULAMA */
 function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   if (temizle) {
     clusterGroup.clearLayers();
@@ -511,7 +504,6 @@ function excelIndir() {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Camiler");
   XLSX.writeFile(workbook, `camiler_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
-
 </script>
 </body>
 </html>
