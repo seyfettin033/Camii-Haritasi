@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gelişmiş Cami & Mescid Bulucu</title>
+    <title>Cami & Mescid Bulucu</title>
     
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,58 +13,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         body {
             display: flex;
             height: 100vh;
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: #022c22;
+            color: #ecfdf5;
             overflow: hidden;
         }
 
         /* Sol Kontrol & Liste Paneli */
         #sidebar {
-            width: 380px;
-            background: #1e293b;
+            width: 390px;
+            background: #064e3b;
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
             z-index: 1000;
-            border-right: 1px solid #334155;
+            border-right: 1px solid #047857;
         }
 
         .header {
             padding: 24px 20px;
-            background: linear-gradient(135deg, #0d9488, #0f766e);
-            color: white;
+            background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%);
+            color: #ffffff;
+            border-bottom: 1px solid #10b981;
+            position: relative;
         }
 
         .header h1 {
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: #a7f3d0;
+            letter-spacing: -0.3px;
+        }
+
+        .header h1 i {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px;
+            border-radius: 10px;
+            color: #34d399;
         }
 
         .header p {
-            font-size: 0.82rem;
-            opacity: 0.85;
-            margin-top: 6px;
+            font-size: 0.83rem;
+            color: #d1fae5;
+            margin-top: 8px;
+            line-height: 1.4;
         }
 
         .controls {
             padding: 18px 20px;
-            border-bottom: 1px solid #334155;
+            background: #022c22;
+            border-bottom: 1px solid #065f46;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -72,10 +85,10 @@
 
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 13px;
             border: none;
-            border-radius: 8px;
-            background-color: #0d9488;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #059669, #10b981);
             color: white;
             font-weight: 600;
             font-size: 0.9rem;
@@ -83,82 +96,116 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+            transition: all 0.25s ease;
         }
 
         .btn:hover {
-            background-color: #14b8a6;
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #10b981, #34d399);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
-        .btn:disabled {
-            background-color: #475569;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary {
+            background: rgba(6, 95, 70, 0.6);
+            color: #a7f3d0;
+            border: 1px solid #059669;
+            box-shadow: none;
         }
 
-        /* İstatistik & Durum */
+        .btn-secondary:hover {
+            background: #047857;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(4, 120, 87, 0.3);
+        }
+
+        /* Durum Çubuğu */
         .status-bar {
-            padding: 10px 20px;
-            font-size: 0.85rem;
-            color: #94a3b8;
-            background: #0f172a;
+            padding: 12px 20px;
+            font-size: 0.82rem;
+            color: #a7f3d0;
+            background: #064e3b;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #047857;
+        }
+
+        .badge {
+            background: #10b981;
+            color: #022c22;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
         }
 
         /* Sonuç Listesi */
         #results-list {
             flex: 1;
             overflow-y: auto;
-            padding: 12px;
+            padding: 14px;
+            background: #022c22;
+        }
+
+        #results-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #results-list::-webkit-scrollbar-thumb {
+            background: #047857;
+            border-radius: 3px;
         }
 
         .place-card {
-            background: #334155;
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            background: rgba(6, 78, 59, 0.4);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
             cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
+            border: 1px solid #065f46;
+            backdrop-filter: blur(5px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .place-card:hover {
-            border-color: #0d9488;
-            background: #3e4c5e;
+            border-color: #34d399;
+            background: rgba(6, 78, 59, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
         }
 
         .place-card h3 {
-            font-size: 0.95rem;
-            color: #f1f5f9;
-            margin-bottom: 6px;
+            font-size: 0.98rem;
+            color: #ecfdf5;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 600;
         }
 
         .place-card .tag {
-            font-size: 0.7rem;
-            background: #0d9488;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 500;
+            font-size: 0.68rem;
+            background: #059669;
+            color: #ecfdf5;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
         }
 
         .place-card .tag.unnamed {
-            background: #64748b;
+            background: #047857;
+            color: #a7f3d0;
         }
 
         .place-card p {
             font-size: 0.8rem;
-            color: #cbd5e1;
+            color: #a7f3d0;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         /* Harita Alanı */
@@ -171,18 +218,31 @@
         .loader {
             display: none;
             text-align: center;
-            padding: 20px;
-            color: #14b8a6;
+            padding: 24px;
+            color: #34d399;
+            background: #022c22;
         }
 
         .loader i {
-            font-size: 1.8rem;
+            font-size: 2rem;
             animation: spin 1s infinite linear;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Leaflet Pop-up Stil İyileştirmeleri */
+        .leaflet-popup-content-wrapper {
+            background: #064e3b !important;
+            color: #ecfdf5 !important;
+            border: 1px solid #10b981;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        }
+        .leaflet-popup-tip {
+            background: #064e3b !important;
         }
 
         /* Mobil Uyum */
@@ -192,10 +252,10 @@
             }
             #sidebar {
                 width: 100%;
-                height: 40%;
+                height: 48%;
             }
             #map {
-                height: 60%;
+                height: 52%;
             }
         }
     </style>
@@ -204,27 +264,27 @@
 
     <div id="sidebar">
         <div class="header">
-            <h1><i class="fa-solid => fa-mosque"></i> Cami Bulucu</h1>
-            <p>Etrafınızdaki veya harita alanındaki tüm cami ve mescidleri hızlıca bulun.</p>
+            <h1><i class="fa-solid fa-mosque"></i> Cami Bulucu</h1>
+            <p>Çevrenizdeki tüm ibadethaneleri zümrüt yeşili konforuyla keşfedin.</p>
         </div>
 
         <div class="controls">
             <button id="search-btn" class="btn">
                 <i class="fa-solid fa-crosshairs"></i> Konumumun Çevresinde Ara
             </button>
-            <button id="search-bbox-btn" class="btn" style="background-color: #3b82f6;">
+            <button id="search-bbox-btn" class="btn btn-secondary">
                 <i class="fa-solid fa-map-marked-alt"></i> Harita Alanında Ara
             </button>
         </div>
 
         <div class="status-bar">
-            <span id="status-text">Arama yapmak için bir butona basın.</span>
-            <span id="count-badge"></span>
+            <span id="status-text">Arama yapmak için butonlara tıklayın.</span>
+            <span id="count-badge" class="badge">0</span>
         </div>
 
         <div id="loader" class="loader">
             <i class="fa-solid fa-spinner"></i>
-            <p style="margin-top: 8px; font-size: 0.85rem;">Yakındaki ibadethaneler taranıyor...</p>
+            <p style="margin-top: 10px; font-size: 0.85rem;">Yakındaki cami ve mescidler bulunuyor...</p>
         </div>
 
         <div id="results-list"></div>
@@ -236,7 +296,7 @@
         // Harita Başlatma (Varsayılan: İstanbul)
         const map = L.map('map').setView([41.0082, 28.9784], 13);
 
-        // Koyu Tema Harita Katmanı (CartoDB Dark Matter)
+        // Koyu & Estetik Zümrüt Ahenk Harita Katmanı (CartoDB Dark Matter)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO',
             maxZoom: 19
@@ -244,26 +304,26 @@
 
         let markersGroup = L.layerGroup().addTo(map);
 
-        // İkon Yapılandırması
+        // Zümrüt Yeşili İkon Tasarımları
         const mosqueIcon = L.divIcon({
-            html: `<div style="background:#0d9488; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);"><i class="fa-solid fa-mosque" style="font-size:14px;"></i></div>`,
+            html: `<div style="background:linear-gradient(135deg, #059669, #10b981); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ecfdf5; box-shadow:0 4px 10px rgba(0,0,0,0.5);"><i class="fa-solid fa-mosque" style="font-size:14px;"></i></div>`,
             className: '',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
         });
 
         const userIcon = L.divIcon({
-            html: `<div style="background:#ef4444; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4);"><i class="fa-solid fa-user" style="font-size:10px;"></i></div>`,
+            html: `<div style="background:#ef4444; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5);"><i class="fa-solid fa-user" style="font-size:12px;"></i></div>`,
             className: '',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
         });
 
-        // Konuma göre Arama
+        // Konuma göre Arama (3 KM)
         document.getElementById('search-btn').addEventListener('click', () => {
             if (navigator.geolocation) {
                 showLoader(true);
-                updateStatus("Konumunuz alınıyor...");
+                updateStatus("Konumunuz tespit ediliyor...");
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         const lat = pos.coords.latitude;
@@ -271,11 +331,10 @@
                         
                         map.setView([lat, lon], 15);
                         
-                        // Kullanıcı İkonu
                         L.marker([lat, lon], { icon: userIcon }).addTo(markersGroup)
-                            .bindPopup("<b>Buradasınız</b>").openPopup();
+                            .bindPopup("<b style='color:#ecfdf5;'>Mevcut Konumunuz</b>").openPopup();
 
-                        // 3 KM Yarıçapında Arama Yap
+                        // Overpass Query
                         const query = `
                             [out:json][timeout:25];
                             (
@@ -289,7 +348,7 @@
                     },
                     (err) => {
                         showLoader(false);
-                        alert("Konum alınamadı! Lütfen konum izinlerinizi kontrol edin.");
+                        alert("Konum alınamadı! Lütfen cihazınızdan konum erişim iznini kontrol edin.");
                     }
                 );
             } else {
@@ -300,7 +359,7 @@
         // Haritada Görünen Alanda Arama
         document.getElementById('search-bbox-btn').addEventListener('click', () => {
             showLoader(true);
-            updateStatus("Arayüzdeki alan taranıyor...");
+            updateStatus("Harita alanı taranıyor...");
             const bounds = map.getBounds();
             const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
 
@@ -316,7 +375,7 @@
             fetchOverpassData(query);
         });
 
-        // Overpass API Veri Çekme Fonksiyonu
+        // Overpass API Veri Çekme
         function fetchOverpassData(query) {
             fetch('https://overpass-api.de/api/interpreter', {
                 method: 'POST',
@@ -325,11 +384,11 @@
             .then(res => res.json())
             .then(data => {
                 showLoader(false);
-                renderResults(data.elements);
+                renderResults(data.elements || []);
             })
             .catch(err => {
                 showLoader(false);
-                updateStatus("Veri çekilirken bir hata oluştu!");
+                updateStatus("Veri çekme sırasında bir hata oluştu!");
                 console.error(err);
             });
         }
@@ -340,50 +399,55 @@
             const listContainer = document.getElementById('results-list');
             listContainer.innerHTML = '';
 
-            if (!elements || elements.length === 0) {
-                updateStatus("Hiçbir sonuç bulunamadı.");
+            if (elements.length === 0) {
+                updateStatus("Bu alanda ibadethane bulunamadı.");
                 document.getElementById('count-badge').innerText = '0';
                 return;
             }
 
-            updateStatus("Arama tamamlandı.");
-            document.getElementById('count-badge').innerText = `${elements.length} Adet`;
+            updateStatus("Tarama başarıyla tamamlandı.");
+            document.getElementById('count-badge').innerText = elements.length;
 
-            elements.forEach((item, index) => {
-                // Koordinat tayini (Way veya Node durumuna göre)
+            elements.forEach((item) => {
                 const lat = item.lat || (item.center && item.center.lat);
                 const lon = item.lon || (item.center && item.center.lon);
 
                 if (!lat || !lon) return;
 
-                // **İSİMSİZ CAMİ DÜZELTMESİ**
                 const tags = item.tags || {};
-                const name = tags.name ? tags.name : (tags['name:tr'] || "İsimsiz Cami / Mescid");
-                const isUnnamed = !tags.name;
+                
+                // İsimsiz Camiler Kontrolü
+                let name = tags.name || tags['name:tr'] || tags['name:en'];
+                let isUnnamed = false;
+
+                if (!name) {
+                    name = "İsimsiz Cami / Mescid";
+                    isUnnamed = true;
+                }
 
                 // Haritaya Marker Ekleme
                 const marker = L.marker([lat, lon], { icon: mosqueIcon }).addTo(markersGroup);
                 
                 const popupContent = `
-                    <div style="color:#0f172a; font-family:'Inter';">
-                        <strong style="font-size:14px;">${name}</strong><br>
-                        <span style="font-size:12px; color:#64748b;">${tags.building ? 'Bina Türü: ' + tags.building : 'İbadethane'}</span><br>
-                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" style="display:inline-block; margin-top:6px; color:#0d9488; font-weight:600; text-decoration:none;">
+                    <div style="font-family:'Plus Jakarta Sans'; padding: 4px;">
+                        <strong style="font-size:15px; color:#ecfdf5; display:block; margin-bottom:4px;">${name}</strong>
+                        <span style="font-size:12px; color:#a7f3d0;">${tags.building ? 'Mimari Yapı: ' + tags.building : 'İbadethane'}</span><br>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; color:#34d399; font-weight:600; text-decoration:none; font-size:13px;">
                             <i class="fa-solid fa-diamond-turn-right"></i> Yol Tarifi Al
                         </a>
                     </div>
                 `;
                 marker.bindPopup(popupContent);
 
-                // Liste Kartı Oluşturma
+                // Sol Liste Kartı Oluşturma
                 const card = document.createElement('div');
                 card.className = 'place-card';
                 card.innerHTML = `
                     <h3>
                         ${name}
-                        <span class="tag ${isUnnamed ? 'unnamed' : ''}">${isUnnamed ? 'İsimsiz' : 'Mescid/Cami'}</span>
+                        <span class="tag ${isUnnamed ? 'unnamed' : ''}">${isUnnamed ? 'İsimsiz' : 'Mescid'}</span>
                     </h3>
-                    <p><i class="fa-solid fa-location-dot" style="color:#0d9488;"></i> Konuma Gitmek İçin Tıklayın</p>
+                    <p><i class="fa-solid fa-location-dot" style="color:#34d399;"></i> Haritada görüntüle ve odaklan</p>
                 `;
 
                 card.addEventListener('click', () => {
