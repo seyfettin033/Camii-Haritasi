@@ -1,529 +1,407 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelişmiş Cami & Mescid Bulucu</title>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- FontAwesome İkonları -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<!-- Leaflet Marker Cluster CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
 
-<style>
-:root {
-  --primary: #6b4226;
-  --primary-hover: #52311b;
-  --accent: #d97706;
-  --bg-light: #fdfbf7;
-  --card-bg: #ffffff;
-  --text-main: #2d241e;
-  --text-muted: #786c64;
-  --border-color: #e8e1d7;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden;
+        }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height:100%; margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { background: var(--bg-light); color: var(--text-main); display: flex; flex-direction: column; }
+        /* Sol Kontrol & Liste Paneli */
+        #sidebar {
+            width: 380px;
+            background: #1e293b;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            border-right: 1px solid #334155;
+        }
 
-/* HEADER */
-header {
-  background: linear-gradient(135deg, #4a2c11 0%, #6b4226 100%);
-  color: #fff;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  z-index: 1000;
-}
-.header-brand { display: flex; align-items: center; gap: 10px; }
-.header-brand img { width: 26px; height: auto; border-radius: 3px; }
-.header-brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
-.header-brand small { display: block; font-size: 11px; opacity: 0.85; font-weight: 400; }
+        .header {
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #0d9488, #0f766e);
+            color: white;
+        }
 
-.toggle-filter-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(5px);
-  transition: all 0.2s;
-}
-.toggle-filter-btn:hover { background: rgba(255, 255, 255, 0.25); }
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-/* AYET BOX */
-.ayet-box {
-  background: #f5ede2;
-  color: #52311b;
-  padding: 8px 14px;
-  font-size: 12px;
-  text-align: center;
-  border-bottom: 1px solid var(--border-color);
-  line-height: 1.4;
-}
-.ayet-box strong { color: var(--primary); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; }
+        .header p {
+            font-size: 0.82rem;
+            opacity: 0.85;
+            margin-top: 6px;
+        }
 
-/* PANEL CONTAINER */
-#panel-container {
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
-  z-index: 999;
-  transition: all 0.3s ease-in-out;
-  max-height: 500px;
-  overflow: hidden;
-}
-#panel-container.collapsed {
-  max-height: 0;
-  border-bottom: none;
-}
+        .controls {
+            padding: 18px 20px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-/* TABS */
-.tabs {
-  display: flex;
-  background: #f2e9dc;
-  border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab-btn {
-  flex: 1;
-  min-width: 100px;
-  padding: 10px 8px;
-  border: none;
-  background: transparent;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-  color: var(--text-muted);
-  white-space: nowrap;
-  transition: all 0.2s;
-  border-bottom: 2px solid transparent;
-}
-.tab-btn.active {
-  color: var(--primary);
-  background: var(--card-bg);
-  border-bottom: 2px solid var(--primary);
-}
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #0d9488;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
 
-/* FILTERS */
-.filters { padding: 12px 16px; }
-.filter-group { display: none; }
-.filter-group.active { display: block; }
+        .btn:hover {
+            background-color: #14b8a6;
+            transform: translateY(-1px);
+        }
 
-select, input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: #faf8f5;
-  color: var(--text-main);
-  font-size: 13px;
-  outline: none;
-  transition: all 0.2s;
-}
-select:focus, input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(107, 66, 38, 0.1); }
+        .btn:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-.search-box-group { display: flex; flex-direction: column; gap: 8px; }
-.search-box { display: flex; gap: 8px; }
+        /* İstatistik & Durum */
+        .status-bar {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.btn-action, .btn-location {
-  padding: 10px 14px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  width: 100%;
-  transition: background 0.2s;
-}
-.btn-action:hover, .btn-location:hover { background: var(--primary-hover); }
+        /* Sonuç Listesi */
+        #results-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
 
-/* MAP & FLOATING OVERLAYS */
-#map-wrapper { position: relative; flex: 1; width: 100%; min-height: 300px; }
-#map { width: 100%; height: 100%; }
+        .place-card {
+            background: #334155;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
 
-/* FLOATING COUNTER BADGE */
-#sayac {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  border: 1px solid var(--border-color);
-  pointer-events: none;
-  white-space: nowrap;
-}
+        .place-card:hover {
+            border-color: #0d9488;
+            background: #3e4c5e;
+        }
 
-/* FLOATING LOCATION BUTTON (FAB) */
-.fab-location {
-  position: absolute;
-  bottom: 24px;
-  right: 16px;
-  z-index: 1000;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: transform 0.2s, background 0.2s;
-}
-.fab-location:active { transform: scale(0.92); }
+        .place-card h3 {
+            font-size: 0.95rem;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-/* POPUP DESIGN */
-.leaflet-popup-content-wrapper { border-radius: 12px; padding: 4px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-.popup { font-size: 12px; text-align: center; }
-.popup b { color: var(--primary); display: block; margin-bottom: 2px; font-size: 14px; word-break: break-word; }
-.popup small { color: var(--text-muted); display: block; margin-bottom: 10px; font-size: 11px; }
-.popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.popup a {
-  display: block; padding: 7px 4px; border-radius: 6px;
-  text-decoration: none; font-weight: 600; font-size: 11px; color: #fff;
-}
-.osm { background: #6b4226; grid-column: span 2; }
-.google { background: #d97706; }
-.diyanet { background: #dc2626; }
-.mapillary { background: #059669; }
-.panoramax { background: #7c3aed; }
-.osm-note { background: #991b1b; grid-column: span 2; }
-</style>
+        .place-card .tag {
+            font-size: 0.7rem;
+            background: #0d9488;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .place-card .tag.unnamed {
+            background: #64748b;
+        }
+
+        .place-card p {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Harita Alanı */
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+
+        /* Yükleniyor Göstergesi */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #14b8a6;
+        }
+
+        .loader i {
+            font-size: 1.8rem;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobil Uyum */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+                height: 40%;
+            }
+            #map {
+                height: 60%;
+            }
+        }
+    </style>
 </head>
-
 <body>
 
-<header>
-  <div class="header-brand">
-    <img src="https://flagcdn.com/w40/tr.png" alt="TR">
-    <div>
-      <h1>Camii Rehberi</h1>
-      <small>OpenStreetMap Veri Platformu</small>
-    </div>
-  </div>
-  <button class="toggle-filter-btn" onclick="toggleFilterPanel()" id="filter-toggle-text">⚙️ Filtreleri Gizle</button>
-</header>
-
-<div class="ayet-box">
-  <strong>📖 Günün Ayeti:</strong> <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."</span>
-  <span id="ayet-sure" style="opacity:0.8;">(Tevbe, 18)</span>
-</div>
-
-<div id="panel-container">
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-    <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
-    <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
-    <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
-  </div>
-
-  <div class="filters">
-    <div id="group-konum" class="filter-group active">
-      <button class="btn-location" onclick="konumlaCamileriBul()">📍 Bulunduğum Konuma Göre Yakındaki Camileri Bul</button>
-    </div>
-
-    <div id="group-isimsiz" class="filter-group">
-      <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
-        <option value="">Lütfen il seçiniz</option>
-      </select>
-    </div>
-
-    <div id="group-tum" class="filter-group">
-      <select id="il-tum" onchange="tumCamileriGetir(this.value)">
-        <option value="">Lütfen il seçiniz</option>
-      </select>
-    </div>
-
-    <div id="group-arama" class="filter-group">
-      <div class="search-box-group">
-        <select id="il-arama"><option value="">Tüm Türkiye Geneli</option></select>
-        <div class="search-box">
-          <input type="text" id="cami-ismi" placeholder="Cami adı girin (Örn: Süleymaniye)" onkeyup="if(event.key==='Enter') camiAra()">
-          <button class="btn-action" style="width:auto; padding:0 18px;" onclick="camiAra()">Ara</button>
+    <div id="sidebar">
+        <div class="header">
+            <h1><i class="fa-solid => fa-mosque"></i> Cami Bulucu</h1>
+            <p>Etrafınızdaki veya harita alanındaki tüm cami ve mescidleri hızlıca bulun.</p>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div id="map-wrapper">
-  <div id="sayac">Arama yapmak için filtreden bir seçenek belirleyin.</div>
-  <button class="fab-location" onclick="konumlaCamileriBul()" title="Konumuma Git">🎯</button>
-  <div id="map"></div>
-</div>
-
-<!-- Leaflet & MarkerCluster JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-
-<script>
-const ayetler = [
-  { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
-  { metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.", sure: "(Ankebût Suresi, 45. Ayet)" },
-  { metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.", sure: "(Râd Suresi, 28. Ayet)" }
-];
-
-function ayetGetir() {
-  const r = ayetler[Math.floor(Math.random() * ayetler.length)];
-  document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
-  document.getElementById("ayet-sure").innerText = r.sure;
-}
-ayetGetir();
-
-const iller = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
-  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
-  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
-  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
-  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
-  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
-  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
-];
-
-const ilSelectIsimsiz = document.getElementById("il-isimsiz");
-const ilSelectTum = document.getElementById("il-tum");
-const ilSelectArama = document.getElementById("il-arama");
-
-iller.forEach((il, index) => {
-  const plaka = (index + 1).toString().padStart(2, '0');
-  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
-});
-
-const map = L.map('map', { zoomControl: false }).setView([39, 35], 6);
-L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '© OpenStreetMap'
-}).addTo(map);
-
-const clusterGroup = L.markerClusterGroup({
-  chunkedLoading: true,
-  maxClusterRadius: 50
-}).addTo(map);
-
-function toggleFilterPanel() {
-  const panel = document.getElementById("panel-container");
-  const btnText = document.getElementById("filter-toggle-text");
-  panel.classList.toggle("collapsed");
-  if (panel.classList.contains("collapsed")) {
-    btnText.innerText = "⚙️ Filtreleri Göster";
-  } else {
-    btnText.innerText = "⚙️ Filtreleri Gizle";
-  }
-}
-
-function escapeHtml(text) {
-  if (!text) return "";
-  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-
-function switchTab(mode) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
-  clusterGroup.clearLayers();
-
-  if (mode === 'konum') {
-    document.querySelectorAll('.tab-btn')[0].classList.add('active');
-    document.getElementById('group-konum').classList.add('active');
-  } else if (mode === 'isimsiz') {
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    document.getElementById('group-isimsiz').classList.add('active');
-  } else if (mode === 'tum') {
-    document.querySelectorAll('.tab-btn')[2].classList.add('active');
-    document.getElementById('group-tum').classList.add('active');
-  } else {
-    document.querySelectorAll('.tab-btn')[3].classList.add('active');
-    document.getElementById('group-arama').classList.add('active');
-  }
-}
-
-function konumlaCamileriBul() {
-  const sayac = document.getElementById("sayac");
-  if (!navigator.geolocation) return alert("Tarayıcınız konum özelliğini desteklemiyor.");
-
-  sayac.innerHTML = "📡 Konumunuz tespit ediliyor...";
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      clusterGroup.clearLayers();
-
-      const userMarker = L.marker([lat, lon]).bindPopup("<b>📍 Buradasınız</b>");
-      clusterGroup.addLayer(userMarker);
-      userMarker.openPopup();
-      map.setView([lat, lon], 14);
-
-      const query = `[out:json][timeout:90][maxsize:1073741824];
-      (
-        nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        nwr["building"="mosque"](around:5000, ${lat}, ${lon});
-      );
-      out center;`;
-
-      overpassSorgula(query, "Yakınınızdaki camiler (5 km)", "#6b4226", false);
-    },
-    () => { sayac.innerHTML = "❌ Konum alınamadı."; },
-    { timeout: 10000, enableHighAccuracy: true }
-  );
-}
-
-function isimsizCamileriGetir(il) {
-  if (!il) return;
-  const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
-  (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"^$"](area.searchArea);
-    nwr["building"="mosque"]["name"~"^$"](area.searchArea);
-  );
-  out center;`;
-  overpassSorgula(query, `${il} - İsimsiz Camiler`, "#dc2626");
-}
-
-function tumCamileriGetir(il) {
-  if (!il) return;
-  const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
-  (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
-    nwr["building"="mosque"](area.searchArea);
-  );
-  out center;`;
-  overpassSorgula(query, `${il} - Tüm Camiler`, "#6b4226");
-}
-
-function camiAra() {
-  const isim = document.getElementById("cami-ismi").value.trim();
-  const seciliIl = document.getElementById("il-arama").value;
-  if (!isim) return alert("Lütfen arama kelimesi girin.");
-
-  const guvenliIsim = isim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  let query = "";
-  let baslik = "";
-
-  if (seciliIl) {
-    query = `[out:json][timeout:180][maxsize:1073741824];
-    area["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
-    (
-      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
-      nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.searchArea);
-    );
-    out center;`;
-    baslik = `${seciliIl} - "${isim}"`;
-  } else {
-    query = `[out:json][timeout:180][maxsize:1073741824];
-    area["ISO3166-1"="TR"]->.trArea;
-    (
-      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.trArea);
-      nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.trArea);
-    );
-    out center;`;
-    baslik = `TR Geneli - "${isim}"`;
-  }
-  overpassSorgula(query, baslik, "#6b4226");
-}
-
-function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
-  if (temizle) clusterGroup.clearLayers();
-  const sayac = document.getElementById("sayac");
-  sayac.innerHTML = `⏳ ${baslikMetni} yükleniyor...`;
-
-  fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: query })
-  .then(r => r.json())
-  .then(data => {
-    const uniqueElements = [];
-    const seenIds = new Set();
-
-    data.elements.forEach(el => {
-      const key = `${el.type}/${el.id}`;
-      if (seenIds.has(key)) return;
-      seenIds.add(key);
-
-      const name = (el.tags && el.tags.name) ? el.tags.name.toLowerCase() : "";
-      if (!name.includes("kilise") && !name.includes("synagogue") && !name.includes("havra")) {
-        uniqueElements.push(el);
-      }
-    });
-
-    const adet = uniqueElements.length;
-    if (adet === 0) {
-      sayac.innerHTML = `❌ ${baslikMetni} için sonuç bulunamadı.`;
-      return;
-    }
-
-    const bounds = [];
-    const markers = [];
-
-    uniqueElements.forEach(el => {
-      const lat = el.lat || (el.center && el.center.lat);
-      const lon = el.lon || (el.center && el.center.lon);
-      if (!lat || !lon) return;
-
-      const guvenliCamiAdi = escapeHtml((el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami");
-      bounds.push([lat, lon]);
-
-      const popup = `
-      <div class="popup">
-        <b>${guvenliCamiAdi}</b>
-        <small>ID: ${el.type}/${el.id}</small>
-        <div class="popup-links">
-          <a class="google" target="_blank" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
-          <a class="diyanet" target="_blank" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
-          <a class="mapillary" target="_blank" href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">📸 Mapillary</a>
-          <a class="panoramax" target="_blank" href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">📷 Panoramax</a>
-          <a class="osm" target="_blank" href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">✍️ OSM Düzenle</a>
-          <a class="osm-note" target="_blank" href="https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}">🚨 Not Ekle</a>
+        <div class="controls">
+            <button id="search-btn" class="btn">
+                <i class="fa-solid fa-crosshairs"></i> Konumumun Çevresinde Ara
+            </button>
+            <button id="search-bbox-btn" class="btn" style="background-color: #3b82f6;">
+                <i class="fa-solid fa-map-marked-alt"></i> Harita Alanında Ara
+            </button>
         </div>
-      </div>`;
 
-      const m = L.circleMarker([lat, lon], {
-        radius: 6,
-        color: "#ffffff",
-        weight: 1.5,
-        fillColor: noktaRengi,
-        fillOpacity: 0.9
-      }).bindPopup(popup);
+        <div class="status-bar">
+            <span id="status-text">Arama yapmak için bir butona basın.</span>
+            <span id="count-badge"></span>
+        </div>
 
-      markers.push(m);
-    });
+        <div id="loader" class="loader">
+            <i class="fa-solid fa-spinner"></i>
+            <p style="margin-top: 8px; font-size: 0.85rem;">Yakındaki ibadethaneler taranıyor...</p>
+        </div>
 
-    clusterGroup.addLayers(markers);
-    if (bounds.length > 0 && temizle) map.fitBounds(bounds, { padding: [30, 30] });
-    sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
-  })
-  .catch(() => {
-    sayac.innerHTML = `❌ Bağlantı hatası veya zaman aşımı.`;
-  });
-}
-</script>
+        <div id="results-list"></div>
+    </div>
 
+    <div id="map"></div>
+
+    <script>
+        // Harita Başlatma (Varsayılan: İstanbul)
+        const map = L.map('map').setView([41.0082, 28.9784], 13);
+
+        // Koyu Tema Harita Katmanı (CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            maxZoom: 19
+        }).addTo(map);
+
+        let markersGroup = L.layerGroup().addTo(map);
+
+        // İkon Yapılandırması
+        const mosqueIcon = L.divIcon({
+            html: `<div style="background:#0d9488; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);"><i class="fa-solid fa-mosque" style="font-size:14px;"></i></div>`,
+            className: '',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const userIcon = L.divIcon({
+            html: `<div style="background:#ef4444; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4);"><i class="fa-solid fa-user" style="font-size:10px;"></i></div>`,
+            className: '',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        // Konuma göre Arama
+        document.getElementById('search-btn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                showLoader(true);
+                updateStatus("Konumunuz alınıyor...");
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        
+                        map.setView([lat, lon], 15);
+                        
+                        // Kullanıcı İkonu
+                        L.marker([lat, lon], { icon: userIcon }).addTo(markersGroup)
+                            .bindPopup("<b>Buradasınız</b>").openPopup();
+
+                        // 3 KM Yarıçapında Arama Yap
+                        const query = `
+                            [out:json][timeout:25];
+                            (
+                              node["amenity"="place_of_worship"]["religion"="muslim"](around:3000, ${lat}, ${lon});
+                              way["amenity"="place_of_worship"]["religion"="muslim"](around:3000, ${lat}, ${lon});
+                              relation["amenity"="place_of_worship"]["religion"="muslim"](around:3000, ${lat}, ${lon});
+                            );
+                            out center;
+                        `;
+                        fetchOverpassData(query);
+                    },
+                    (err) => {
+                        showLoader(false);
+                        alert("Konum alınamadı! Lütfen konum izinlerinizi kontrol edin.");
+                    }
+                );
+            } else {
+                alert("Tarayıcınız konum servisini desteklemiyor.");
+            }
+        });
+
+        // Haritada Görünen Alanda Arama
+        document.getElementById('search-bbox-btn').addEventListener('click', () => {
+            showLoader(true);
+            updateStatus("Arayüzdeki alan taranıyor...");
+            const bounds = map.getBounds();
+            const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+
+            const query = `
+                [out:json][timeout:25];
+                (
+                  node["amenity"="place_of_worship"]["religion"="muslim"](${bbox});
+                  way["amenity"="place_of_worship"]["religion"="muslim"](${bbox});
+                  relation["amenity"="place_of_worship"]["religion"="muslim"](${bbox});
+                );
+                out center;
+            `;
+            fetchOverpassData(query);
+        });
+
+        // Overpass API Veri Çekme Fonksiyonu
+        function fetchOverpassData(query) {
+            fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST',
+                body: 'data=' + encodeURIComponent(query)
+            })
+            .then(res => res.json())
+            .then(data => {
+                showLoader(false);
+                renderResults(data.elements);
+            })
+            .catch(err => {
+                showLoader(false);
+                updateStatus("Veri çekilirken bir hata oluştu!");
+                console.error(err);
+            });
+        }
+
+        // Sonuçları Ekran ve Haritaya İşleme
+        function renderResults(elements) {
+            markersGroup.clearLayers();
+            const listContainer = document.getElementById('results-list');
+            listContainer.innerHTML = '';
+
+            if (!elements || elements.length === 0) {
+                updateStatus("Hiçbir sonuç bulunamadı.");
+                document.getElementById('count-badge').innerText = '0';
+                return;
+            }
+
+            updateStatus("Arama tamamlandı.");
+            document.getElementById('count-badge').innerText = `${elements.length} Adet`;
+
+            elements.forEach((item, index) => {
+                // Koordinat tayini (Way veya Node durumuna göre)
+                const lat = item.lat || (item.center && item.center.lat);
+                const lon = item.lon || (item.center && item.center.lon);
+
+                if (!lat || !lon) return;
+
+                // **İSİMSİZ CAMİ DÜZELTMESİ**
+                const tags = item.tags || {};
+                const name = tags.name ? tags.name : (tags['name:tr'] || "İsimsiz Cami / Mescid");
+                const isUnnamed = !tags.name;
+
+                // Haritaya Marker Ekleme
+                const marker = L.marker([lat, lon], { icon: mosqueIcon }).addTo(markersGroup);
+                
+                const popupContent = `
+                    <div style="color:#0f172a; font-family:'Inter';">
+                        <strong style="font-size:14px;">${name}</strong><br>
+                        <span style="font-size:12px; color:#64748b;">${tags.building ? 'Bina Türü: ' + tags.building : 'İbadethane'}</span><br>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" style="display:inline-block; margin-top:6px; color:#0d9488; font-weight:600; text-decoration:none;">
+                            <i class="fa-solid fa-diamond-turn-right"></i> Yol Tarifi Al
+                        </a>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+
+                // Liste Kartı Oluşturma
+                const card = document.createElement('div');
+                card.className = 'place-card';
+                card.innerHTML = `
+                    <h3>
+                        ${name}
+                        <span class="tag ${isUnnamed ? 'unnamed' : ''}">${isUnnamed ? 'İsimsiz' : 'Mescid/Cami'}</span>
+                    </h3>
+                    <p><i class="fa-solid fa-location-dot" style="color:#0d9488;"></i> Konuma Gitmek İçin Tıklayın</p>
+                `;
+
+                card.addEventListener('click', () => {
+                    map.setView([lat, lon], 17);
+                    marker.openPopup();
+                });
+
+                listContainer.appendChild(card);
+            });
+        }
+
+        function showLoader(show) {
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status-text').innerText = text;
+        }
+    </script>
 </body>
 </html>
-
