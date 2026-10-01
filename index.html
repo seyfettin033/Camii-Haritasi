@@ -5,7 +5,11 @@
 <title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Leaflet Marker Cluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
 <style>
 * { box-sizing: border-box; }
@@ -242,7 +246,9 @@ select:focus, input:focus { border-color: #78481d; }
 
 <div id="map"></div>
 
+<!-- Leaflet & MarkerCluster JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
 <script>
 
@@ -263,13 +269,10 @@ const ayetler = [
 
 function ayetGetir() {
   const r = ayetler[Math.floor(Math.random() * ayetler.length)];
-
   document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
   document.getElementById("ayet-sure").innerText = r.sure;
 }
-
 ayetGetir();
-
 
 const iller = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
@@ -282,622 +285,271 @@ const iller = [
   "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
 
-
 const ilSelectIsimsiz = document.getElementById("il-isimsiz");
 const ilSelectTum = document.getElementById("il-tum");
 const ilSelectArama = document.getElementById("il-arama");
 
 iller.forEach((il, index) => {
-
   const plaka = (index + 1).toString().padStart(2, '0');
-
-  ilSelectIsimsiz.add(
-    new Option(`${plaka} - ${il}`, il)
-  );
-
-  ilSelectTum.add(
-    new Option(`${plaka} - ${il}`, il)
-  );
-
-  ilSelectArama.add(
-    new Option(`${plaka} - ${il}`, il)
-  );
-
+  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
+  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
 });
-
 
 const map = L.map('map').setView([39, 35], 6);
 
-L.tileLayer(
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {
-    maxZoom: 19
-  }
-).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap katkıda bulunanlar'
+}).addTo(map);
 
-const layer = L.layerGroup().addTo(map);
+/* Yüksek miktarda veriyi kasmadan yönetmek için MarkerClusterGroup kullanıyoruz */
+const clusterGroup = L.markerClusterGroup({
+  chunkedLoading: true,
+  maxClusterRadius: 50
+}).addTo(map);
 
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function switchTab(mode) {
-
-  document.querySelectorAll('.tab-btn')
-    .forEach(btn => btn.classList.remove('active'));
-
-  document.querySelectorAll('.filter-group')
-    .forEach(grp => grp.classList.remove('active'));
-
-  layer.clearLayers();
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
+  clusterGroup.clearLayers();
 
   if (mode === 'konum') {
-
     document.querySelectorAll('.tab-btn')[0].classList.add('active');
     document.getElementById('group-konum').classList.add('active');
-
   } else if (mode === 'isimsiz') {
-
     document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('group-isimsiz').classList.add('active');
-
   } else if (mode === 'tum') {
-
     document.querySelectorAll('.tab-btn')[2].classList.add('active');
     document.getElementById('group-tum').classList.add('active');
-
   } else {
-
     document.querySelectorAll('.tab-btn')[3].classList.add('active');
     document.getElementById('group-arama').classList.add('active');
-
   }
 }
 
-
-/* =========================================================
-   📍 KONUM BULMA
-   ========================================================= */
-
+/* 📍 KONUM BULMA */
 function konumlaCamileriBul() {
-
   const sayac = document.getElementById("sayac");
 
-  if (
-    location.protocol !== 'https:' &&
-    location.hostname !== 'localhost'
-  ) {
-
-    alert(
-      "Konum özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir."
-    );
-
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    alert("Konum özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir.");
     sayac.innerHTML = "❌ Güvenli bağlantı (HTTPS) gerekli.";
-
     return;
   }
-
 
   if (!navigator.geolocation) {
-
     alert("Tarayıcınız konum özelliğini desteklemiyor.");
-
     return;
   }
-
 
   sayac.innerHTML = "📡 Konumunuz tespit ediliyor...";
 
-
   navigator.geolocation.getCurrentPosition(
-
     (position) => {
-
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
+      clusterGroup.clearLayers();
 
-      layer.clearLayers();
-
-      L.marker([lat, lon])
-        .addTo(layer)
-        .bindPopup("<b>📍 Buradasınız</b>")
-        .openPopup();
-
+      const userMarker = L.marker([lat, lon]).bindPopup("<b>📍 Buradasınız</b>");
+      clusterGroup.addLayer(userMarker);
+      userMarker.openPopup();
 
       map.setView([lat, lon], 14);
 
-
-      const query = `[out:json][timeout:90];
-
+      /* maxsize eklendi */
+      const query = `[out:json][timeout:90][maxsize:1073741824];
       (
         nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
         nwr["building"="mosque"](around:5000, ${lat}, ${lon});
       );
-
       out center;`;
 
-
-      overpassSorgula(
-        query,
-        "Yakınınızdaki camiler (5 km yarıçap)",
-        "#78481d",
-        false
-      );
-
+      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#78481d", false);
     },
-
     (err) => {
-
-      sayac.innerHTML =
-        "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
-
-      alert(
-        "Konum izni verilmedi veya cihaz konumu kapalı."
-      );
-
+      sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
+      alert("Konum izni verilmedi veya cihaz konumu kapalı.");
     },
-
-    {
-      timeout: 10000,
-      enableHighAccuracy: true
-    }
-
+    { timeout: 10000, enableHighAccuracy: true }
   );
 }
 
-
-/* =========================================================
-   ⚠️ İSİMSİZ CAMİLER
-   ========================================================= */
-
+/* ⚠️ İSİMSİZ CAMİLER */
 function isimsizCamileriGetir(il) {
-
   if (!il) return;
 
-
-  const query = `[out:json][timeout:180];
-
-  area["admin_level"="4"]["name"~"^${il}$"]->.searchArea;
-
+  /* Esnek il arama ve maxsize eklendi */
+  const query = `[out:json][timeout:180][maxsize:1073741824];
+  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"^$"](area.searchArea);
     nwr["building"="mosque"]["name"~"^$"](area.searchArea);
   );
-
   out center;`;
 
-
-  overpassSorgula(
-    query,
-    `${il} ilindeki isimsiz camiler`,
-    "#b84335"
-  );
+  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
 }
 
-
-/* =========================================================
-   🕌 TÜM CAMİLER
-   ========================================================= */
-
+/* 🕌 TÜM CAMİLER */
 function tumCamileriGetir(il) {
-
   if (!il) return;
 
-
-  const query = `[out:json][timeout:180];
-
-  area["admin_level"="4"]["name"~"^${il}$"]->.searchArea;
-
+  /* Esnek il arama ve maxsize eklendi */
+  const query = `[out:json][timeout:180][maxsize:1073741824];
+  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
     nwr["building"="mosque"](area.searchArea);
   );
-
   out center;`;
 
-
-  overpassSorgula(
-    query,
-    `${il} ilindeki tüm camiler`,
-    "#78481d"
-  );
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
 }
 
-
-/* =========================================================
-   🔍 CAMİ ARAMA
-   ========================================================= */
-
+/* 🔍 CAMİ ARAMA */
 function camiAra() {
-
-  const isim =
-    document.getElementById("cami-ismi").value.trim();
-
-  const seciliIl =
-    document.getElementById("il-arama").value;
-
+  const isim = document.getElementById("cami-ismi").value.trim();
+  const seciliIl = document.getElementById("il-arama").value;
 
   if (!isim) {
-
-    return alert(
-      "Lütfen aranacak cami adını veya bir kelime girin."
-    );
-
+    return alert("Lütfen aranacak cami adını veya bir kelime girin.");
   }
 
-
-  /*
-     Overpass regex içinde özel karakter problemi
-     yaşamamak için kullanıcı girişini güvenli hale getiriyoruz.
-  */
-
-  const guvenliIsim =
-    isim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-
+  const guvenliIsim = isim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let query = "";
   let baslik = "";
 
-
   if (seciliIl) {
-
-    query = `[out:json][timeout:180];
-
-    area["admin_level"="4"]["name"~"^${seciliIl}$"]->.searchArea;
-
+    query = `[out:json][timeout:180][maxsize:1073741824];
+    area["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
       nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.searchArea);
     );
-
     out center;`;
-
-
-    baslik =
-      `${seciliIl} - "${isim}" araması`;
-
+    baslik = `${seciliIl} - "${isim}" araması`;
   } else {
-
-    query = `[out:json][timeout:180];
-
-    area["admin_level"="2"]["name"="Türkiye"]->.trArea;
-
+    query = `[out:json][timeout:180][maxsize:1073741824];
+    area["ISO3166-1"="TR"]->.trArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.trArea);
       nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.trArea);
     );
-
     out center;`;
-
-
-    baslik =
-      `Türkiye geneli - "${isim}" araması`;
-
+    baslik = `Türkiye geneli - "${isim}" araması`;
   }
 
-
-  overpassSorgula(
-    query,
-    baslik,
-    "#78481d"
-  );
-
+  overpassSorgula(query, baslik, "#78481d");
 }
 
-
-/* =========================================================
-   🚀 OVERPASS SORGU
-   3000 SINIRI BURADA KALDIRILDI
-   ========================================================= */
-
-function overpassSorgula(
-  query,
-  baslikMetni,
-  noktaRengi,
-  temizle = true
-) {
-
+/* 🚀 OVERPASS SORGU */
+function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   if (temizle) {
-    layer.clearLayers();
+    clusterGroup.clearLayers();
   }
 
+  const sayac = document.getElementById("sayac");
+  sayac.innerHTML = `⏳ ${baslikMetni} yükleniyor...`;
 
-  const sayac =
-    document.getElementById("sayac");
-
-
-  sayac.innerHTML =
-    `⏳ ${baslikMetni} yükleniyor...`;
-
-
-  fetch(
-    "https://overpass-api.de/api/interpreter",
-    {
-      method: "POST",
-      body: query
-    }
-  )
-
-  .then(r => {
-
-    if (!r.ok) {
-      throw new Error(
-        "Overpass HTTP " + r.status
-      );
-    }
-
-    return r.json();
-
+  fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: query
   })
-
+  .then(r => {
+    if (!r.ok) throw new Error("Overpass HTTP " + r.status);
+    return r.json();
+  })
   .then(data => {
-
     const uniqueElements = [];
     const seenIds = new Set();
 
-
-    /*
-       Aynı cami hem amenity=place_of_worship
-       hem building=mosque olarak gelirse
-       sadece bir kez gösteriyoruz.
-    */
-
     data.elements.forEach(el => {
-
-      const uniqueKey =
-        `${el.type}/${el.id}`;
-
-
-      if (seenIds.has(uniqueKey)) {
-        return;
-      }
-
-
+      const uniqueKey = `${el.type}/${el.id}`;
+      if (seenIds.has(uniqueKey)) return;
       seenIds.add(uniqueKey);
 
-
-      const name =
-        (
-          el.tags &&
-          el.tags.name
-        )
-        ?
-        el.tags.name.toLowerCase()
-        :
-        "";
-
-
-      const isOtherWorship =
-        name.includes("kilise") ||
-        name.includes("church") ||
-        name.includes("havra") ||
-        name.includes("sinagog") ||
-        name.includes("synagogue");
-
+      const name = (el.tags && el.tags.name) ? el.tags.name.toLowerCase() : "";
+      const isOtherWorship = name.includes("kilise") || name.includes("church") || 
+                             name.includes("havra") || name.includes("sinagog") || name.includes("synagogue");
 
       if (!isOtherWorship) {
-
         uniqueElements.push(el);
-
       }
-
     });
 
-
-    const adet =
-      uniqueElements.length;
-
-
+    const adet = uniqueElements.length;
     if (adet === 0) {
-
-      sayac.innerHTML =
-        `❌ ${baslikMetni} için sonuç bulunamadı.`;
-
+      sayac.innerHTML = `❌ ${baslikMetni} için sonuç bulunamadı.`;
       return;
-
     }
 
-
-    sayac.innerHTML =
-      `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
-
+    sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet işleniyor...`;
 
     const bounds = [];
+    const markers = [];
 
+    uniqueElements.forEach(el => {
+      const lat = el.lat || (el.center && el.center.lat);
+      const lon = el.lon || (el.center && el.center.lon);
 
-    /*
-       Çok sayıda cami olduğunda tarayıcının donmaması için
-       markerları 250'şerli gruplar halinde ekliyoruz.
-    */
+      if (lat === undefined || lon === undefined) return;
 
-    let index = 0;
+      const hamCamiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
+      const guvenliCamiAdi = escapeHtml(hamCamiAdi);
 
-    const parcaBoyutu = 250;
+      bounds.push([lat, lon]);
 
+      const popup = `
+      <div class="popup">
+        <b>${guvenliCamiAdi}</b>
+        <small>ID: ${el.type}/${el.id}</small>
+        <div class="popup-links">
+          <a class="google" target="_blank" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
+          <a class="diyanet" target="_blank" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
+          <a class="mapillary" target="_blank" href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">📸 Mapillary</a>
+          <a class="panoramax" target="_blank" href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">📷 Panoramax</a>
+          <a class="osm" target="_blank" href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">✍️ OSM'de Düzenle</a>
+          <a class="osm-note" target="_blank" href="https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}">🚨 Not Ekle</a>
+        </div>
+      </div>`;
 
-    function markerlariEkle() {
+      const m = L.circleMarker([lat, lon], {
+        radius: 6.5,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: noktaRengi,
+        fillOpacity: 0.95
+      }).bindPopup(popup);
 
-      const bitis =
-        Math.min(
-          index + parcaBoyutu,
-          uniqueElements.length
-        );
+      markers.push(m);
+    });
 
+    /* Tüm markerlar tek seferde cluster grubuna verilir */
+    clusterGroup.addLayers(markers);
 
-      for (; index < bitis; index++) {
-
-        const el =
-          uniqueElements[index];
-
-
-        const lat =
-          el.lat ||
-          (
-            el.center &&
-            el.center.lat
-          );
-
-
-        const lon =
-          el.lon ||
-          (
-            el.center &&
-            el.center.lon
-          );
-
-
-        if (
-          lat === undefined ||
-          lon === undefined
-        ) {
-
-          continue;
-
-        }
-
-
-        const camiAdi =
-          (
-            el.tags &&
-            el.tags.name
-          )
-          ?
-          el.tags.name
-          :
-          "❗ İsimsiz Cami";
-
-
-        bounds.push([lat, lon]);
-
-
-        const popup = `
-        <div class="popup">
-
-          <b>${camiAdi}</b>
-
-          <small>
-            ID: ${el.type}/${el.id}
-          </small>
-
-          <div class="popup-links">
-
-            <a
-              class="google"
-              target="_blank"
-              href="https://www.google.com/maps?q=${lat},${lon}">
-              🔍 Google
-            </a>
-
-            <a
-              class="diyanet"
-              target="_blank"
-              href="https://camiler.diyanet.gov.tr">
-              🕌 Diyanet
-            </a>
-
-            <a
-              class="mapillary"
-              target="_blank"
-              href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">
-              📸 Mapillary
-            </a>
-
-            <a
-              class="panoramax"
-              target="_blank"
-              href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">
-              📷 Panoramax
-            </a>
-
-            <a
-              class="osm"
-              target="_blank"
-              href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">
-              ✍️ OSM'de Düzenle
-            </a>
-
-            <a
-              class="osm-note"
-              target="_blank"
-              href="https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}">
-              🚨 Not Ekle
-            </a>
-
-          </div>
-
-        </div>`;
-
-
-        L.circleMarker(
-          [lat, lon],
-          {
-            radius: 6.5,
-            color: "#ffffff",
-            weight: 2,
-            fillColor: noktaRengi,
-            fillOpacity: 0.95
-          }
-        )
-        .addTo(layer)
-        .bindPopup(popup);
-
-      }
-
-
-      if (index < uniqueElements.length) {
-
-        /*
-           Tarayıcıya nefes alması için küçük ara veriyoruz.
-        */
-
-        setTimeout(
-          markerlariEkle,
-          0
-        );
-
-      } else {
-
-        /*
-           Tüm markerlar tamamlandı.
-        */
-
-        if (
-          bounds.length > 0 &&
-          temizle
-        ) {
-
-          map.fitBounds(
-            bounds,
-            {
-              padding: [30, 30]
-            }
-          );
-
-        }
-
-        sayac.innerHTML =
-          `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
-
-      }
-
+    if (bounds.length > 0 && temizle) {
+      map.fitBounds(bounds, { padding: [30, 30] });
     }
 
-
-    markerlariEkle();
-
+    sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
   })
-
   .catch(err => {
-
-    console.error(
-      "Overpass hatası:",
-      err
-    );
-
-
-    sayac.innerHTML =
-      `❌ Sunucu yanıt vermedi veya sorgu zaman aşımına uğradı. Lütfen tekrar deneyin.`;
-
+    console.error("Overpass hatası:", err);
+    sayac.innerHTML = `❌ Sunucu yanıt vermedi veya sorgu zaman aşımına uğradı. Lütfen tekrar deneyin.`;
   });
-
 }
 
 </script>
