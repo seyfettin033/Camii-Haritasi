@@ -191,13 +191,13 @@ select, input {
 
   <div id="group-isimsiz" class="filter-group">
     <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
-      <option value="">Lütfen İl Seçiniz</option>
+      <option value="">Lütfen İl Seçiniz (Plaka Kodu - İl Adı)</option>
     </select>
   </div>
 
   <div id="group-tum" class="filter-group">
     <select id="il-tum" onchange="tumCamileriGetir(this.value)">
-      <option value="">Lütfen İl Seçiniz</option>
+      <option value="">Lütfen İl Seçiniz (Plaka Kodu - İl Adı)</option>
     </select>
   </div>
 
@@ -231,26 +231,46 @@ select, input {
 
 let mevcutCamiVerileri = [];
 
+// 81 İlin Plaka Kodu ve Adı
 const iller = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
-  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
-  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
-  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
-  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
-  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
-  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+  { plaka: "01", ad: "Adana" }, { plaka: "02", ad: "Adıyaman" }, { plaka: "03", ad: "Afyonkarahisar" },
+  { plaka: "04", ad: "Ağrı" }, { plaka: "05", ad: "Amasya" }, { plaka: "06", ad: "Ankara" },
+  { plaka: "07", ad: "Antalya" }, { plaka: "08", ad: "Artvin" }, { plaka: "09", ad: "Aydın" },
+  { plaka: "10", ad: "Balıkesir" }, { plaka: "11", ad: "Bilecik" }, { plaka: "12", ad: "Bingöl" },
+  { plaka: "13", ad: "Bitlis" }, { plaka: "14", ad: "Bolu" }, { plaka: "15", ad: "Burdur" },
+  { plaka: "16", ad: "Bursa" }, { plaka: "17", ad: "Çanakkale" }, { plaka: "18", ad: "Çankırı" },
+  { plaka: "19", ad: "Çorum" }, { plaka: "20", ad: "Denizli" }, { plaka: "21", ad: "Diyarbakır" },
+  { plaka: "22", ad: "Edirne" }, { plaka: "23", ad: "Elazığ" }, { plaka: "24", ad: "Erzincan" },
+  { plaka: "25", ad: "Erzurum" }, { plaka: "26", ad: "Eskişehir" }, { plaka: "27", ad: "Gaziantep" },
+  { plaka: "28", ad: "Giresun" }, { plaka: "29", ad: "Gümüşhane" }, { plaka: "30", ad: "Hakkari" },
+  { plaka: "31", ad: "Hatay" }, { plaka: "32", ad: "Isparta" }, { plaka: "33", ad: "Mersin" },
+  { plaka: "34", ad: "İstanbul" }, { plaka: "35", ad: "İzmir" }, { plaka: "36", ad: "Kars" },
+  { plaka: "37", ad: "Kastamonu" }, { plaka: "38", ad: "Kayseri" }, { plaka: "39", ad: "Kırklareli" },
+  { plaka: "40", ad: "Kırşehir" }, { plaka: "41", ad: "Kocaeli" }, { plaka: "42", ad: "Konya" },
+  { plaka: "43", ad: "Kütahya" }, { plaka: "44", ad: "Malatya" }, { plaka: "45", ad: "Manisa" },
+  { plaka: "46", ad: "Kahramanmaraş" }, { plaka: "47", ad: "Mardin" }, { plaka: "48", ad: "Muğla" },
+  { plaka: "49", ad: "Muş" }, { plaka: "50", ad: "Nevşehir" }, { plaka: "51", ad: "Niğde" },
+  { plaka: "52", ad: "Ordu" }, { plaka: "53", ad: "Rize" }, { plaka: "54", ad: "Sakarya" },
+  { plaka: "55", ad: "Samsun" }, { plaka: "56", ad: "Siirt" }, { plaka: "57", ad: "Sinop" },
+  { plaka: "58", ad: "Sivas" }, { plaka: "59", ad: "Tekirdağ" }, { plaka: "60", ad: "Tokat" },
+  { plaka: "61", ad: "Trabzon" }, { plaka: "62", ad: "Tunceli" }, { plaka: "63", ad: "Şanlıurfa" },
+  { plaka: "64", ad: "Uşak" }, { plaka: "65", ad: "Van" }, { plaka: "66", ad: "Yozgat" },
+  { plaka: "67", ad: "Zonguldak" }, { plaka: "68", ad: "Aksaray" }, { plaka: "69", ad: "Bayburt" },
+  { plaka: "70", ad: "Karaman" }, { plaka: "71", ad: "Kırıkkale" }, { plaka: "72", ad: "Batman" },
+  { plaka: "73", ad: "Şırnak" }, { plaka: "74", ad: "Bartın" }, { plaka: "75", ad: "Ardahan" },
+  { plaka: "76", ad: "Iğdır" }, { plaka: "77", ad: "Yalova" }, { plaka: "78", ad: "Karabük" },
+  { plaka: "79", ad: "Kilis" }, { plaka: "80", ad: "Osmaniye" }, { plaka: "81", ad: "Düzce" }
 ];
 
 const ilSelectIsimsiz = document.getElementById("il-isimsiz");
 const ilSelectTum = document.getElementById("il-tum");
 const ilSelectArama = document.getElementById("il-arama");
 
-iller.forEach((il, index) => {
-  const plaka = (index + 1).toString().padStart(2, '0');
-  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
+iller.forEach((il) => {
+  const etiket = `${il.plaka} - ${il.ad}`;
+  ilSelectIsimsiz.add(new Option(etiket, il.plaka));
+  ilSelectTum.add(new Option(etiket, il.plaka));
+  ilSelectArama.add(new Option(etiket, il.plaka));
 });
 
 const map = L.map('map').setView([39.0, 35.0], 6);
@@ -284,7 +304,7 @@ function switchTab(mode) {
   }
 }
 
-/* 📍 YAKINDAKİ CAMİLERİ BULMA (DÜZELTİLDİ) */
+/* 📍 YAKINDAKİ CAMİLER */
 function konumlaCamileriBul() {
   const sayac = document.getElementById("sayac");
 
@@ -308,7 +328,6 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
-      // Overpass QL etrafımda arama sorgusu tam uyumlu hale getirildi
       const query = `[out:json][timeout:30];
       (
         node["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${lat},${lon});
@@ -328,14 +347,16 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER (KESİN ÇÖZÜM) */
-function isimsizCamileriGetir(il) {
-  if (!il) return;
+/* ⚠️ İSİMSİZ CAMİLER (PLAKA KODUNA GÖRE KESİN SORGULAMA) */
+function isimsizCamileriGetir(plakaNo) {
+  if (!plakaNo) return;
 
-  // area(id) bağımlılığı kaldırılıp Türkiye koordinatlarında il araması garantiye alındı
-  const query = `[out:json][timeout:60];
-  area["ISO3166-1"="TR"]["admin_level"="2"]->.tr;
-  area["name"~"${il}",i]["admin_level"="4"](area.tr)->.il;
+  const ilObj = iller.find(i => i.plaka === plakaNo);
+  const ilAdi = ilObj ? ilObj.ad : plakaNo;
+
+  // ISO3166-2:TR plaka kodu eşleştirmesi
+  const query = `[out:json][timeout:90];
+  area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
   (
     node["amenity"="place_of_worship"]["religion"="muslim"](!name)(area.il);
     way["amenity"="place_of_worship"]["religion"="muslim"](!name)(area.il);
@@ -344,16 +365,19 @@ function isimsizCamileriGetir(il) {
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#e74c3c");
+  overpassSorgula(query, `${plakaNo} - ${ilAdi} ilindeki isimsiz camiler`, "#e74c3c");
 }
 
-/* 🕌 TÜM CAMİLER (KESİN ÇÖZÜM) */
-function tumCamileriGetir(il) {
-  if (!il) return;
+/* 🕌 TÜM CAMİLER (PLAKA KODUNA GÖRE KESİN SORGULAMA) */
+function tumCamileriGetir(plakaNo) {
+  if (!plakaNo) return;
 
+  const ilObj = iller.find(i => i.plaka === plakaNo);
+  const ilAdi = ilObj ? ilObj.ad : plakaNo;
+
+  // ISO3166-2:TR plaka kodu eşleştirmesi
   const query = `[out:json][timeout:90];
-  area["ISO3166-1"="TR"]["admin_level"="2"]->.tr;
-  area["name"~"${il}",i]["admin_level"="4"](area.tr)->.il;
+  area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
   (
     node["amenity"="place_of_worship"]["religion"="muslim"](area.il);
     way["amenity"="place_of_worship"]["religion"="muslim"](area.il);
@@ -362,21 +386,23 @@ function tumCamileriGetir(il) {
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#d4af37");
+  overpassSorgula(query, `${plakaNo} - ${ilAdi} ilindeki tüm camiler`, "#d4af37");
 }
 
 /* 🔍 CAMİ ARAMA */
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
-  const seciliIl = document.getElementById("il-arama").value;
+  const plakaNo = document.getElementById("il-arama").value;
 
   if (!isim) return alert("Lütfen aramak istediğiniz cami ismini yazın.");
 
   let query = "";
-  if (seciliIl) {
+  if (plakaNo) {
+    const ilObj = iller.find(i => i.plaka === plakaNo);
+    const ilAdi = ilObj ? ilObj.ad : plakaNo;
+    
     query = `[out:json][timeout:60];
-    area["ISO3166-1"="TR"]["admin_level"="2"]->.tr;
-    area["name"~"${seciliIl}",i]["admin_level"="4"](area.tr)->.il;
+    area["ISO3166-2"="TR-${plakaNo}"]["admin_level"="4"]->.il;
     (
       node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.il);
       way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.il);
@@ -391,7 +417,7 @@ function camiAra() {
       node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.tr);
       way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.tr);
       node["building"="mosque"]["name"~"${isim}",i](area.tr);
-      way["building"="mosque"]["name"~"${isim}",i](area.tr);
+      way["building"="mosque"]["name"~"${isim}",tr];
     );
     out center;`;
   }
