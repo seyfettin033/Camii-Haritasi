@@ -248,7 +248,7 @@ select:focus, input:focus {
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️️ İsimsiz Camiler</button>
   <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
   <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
 </div>
@@ -391,15 +391,9 @@ function switchTab(mode) {
   }
 }
 
-/* 📍 KONUM BULMA */
+/* 📍 KONUM BULMA (DÜZELTİLDİ) */
 function konumlaCamileriBul() {
   const sayac = document.getElementById("sayac");
-
-  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-    alert("Konum özelliğinin çalışması için sitenin HTTPS üzerinden açılması gerekir.");
-    sayac.innerHTML = "❌ Güvenli bağlantı (HTTPS) gerekli.";
-    return;
-  }
 
   if (!navigator.geolocation) {
     alert("Tarayıcınız konum özelliğini desteklemiyor.");
@@ -421,24 +415,29 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
-      const query = `[out:json][timeout:90][maxsize:1073741824];
+      // Overpass QL etrafında arama yapma sözdizimi düzeltildi (5000 metre / 5 km)
+      const query = `[out:json][timeout:60];
       (
-        nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        nwr["building"="mosque"](around:5000, ${lat}, ${lon});
+        node["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${lat},${lon});
+        way["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${lat},${lon});
+        relation["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${lat},${lon});
+        node["building"="mosque"](around:5000,${lat},${lon});
+        way["building"="mosque"](around:5000,${lat},${lon});
       );
       out center;`;
 
       overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#d4af37", false);
     },
     (err) => {
-      sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
-      alert("Konum izni verilmedi veya cihaz konumu kapalı.");
+      console.error(err);
+      sayac.innerHTML = "❌ Konum alınamadı. Lütfen cihaz/tarayıcı konum izinlerini kontrol edin.";
+      alert("Konum alınamadı. Tarayıcı ayarlarından konum izni verdiğinizden ve GPS'inizin açık olduğundan emin olun.");
     },
-    { timeout: 10000, enableHighAccuracy: true }
+    { timeout: 15000, enableHighAccuracy: false }
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER - DÜZELTİLMİŞ SORGU */
+/* ⚠️ İSİMSİZ CAMİLER */
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
@@ -453,7 +452,7 @@ function isimsizCamileriGetir(il) {
   overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#e74c3c");
 }
 
-/* 🕌 TÜM CAMİLER - DÜZELTİLMİŞ SORGU */
+/* 🕌 TÜM CAMİLER */
 function tumCamileriGetir(il) {
   if (!il) return;
 
@@ -651,4 +650,3 @@ function excelIndir() {
 
 </body>
 </html>
-
