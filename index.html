@@ -40,7 +40,6 @@ header {
   text-align: center;
   box-shadow: 0 4px 15px rgba(10, 50, 37, 0.4);
   border-bottom: 3px solid var(--gold-parlak);
-  position: relative;
 }
 header h1 {
   margin: 0;
@@ -245,7 +244,7 @@ const iller = [
   "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
 
-// Alternatif Overpass Sunucuları (Zaman aşımı durumunda otomatik geçiş için)
+// Otomatik fallback için stabil Overpass sunucuları
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
@@ -307,41 +306,33 @@ async function ilSecildi(ilAdi, mod) {
   if (!ilAdi) return;
 
   const sayac = document.getElementById("sayac");
-  sayac.innerHTML = `🔍 ${ilAdi} il sınırları alınıyor...`;
+  sayac.innerHTML = `🔍 ${ilAdi} verileri sorgulanıyor...`;
 
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ilAdi)}+Turkey&limit=1`);
-    const data = await res.json();
-
-    if (!data || data.length === 0) {
-      sayac.innerHTML = `❌ ${ilAdi} için il sınır bilgisi bulunamadı.`;
-      return;
-    }
-
-    const bbox = data[0].boundingbox;
-    const bboxStr = `${bbox[0]},${bbox[2]},${bbox[1]},${bbox[3]}`;
-
-    let query = "";
-    if (mod === 'isimsiz') {
-      query = `[out:json][timeout:25];
-      (
-        node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](${bboxStr});
-        way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](${bboxStr});
-      );
-      out center qt;`;
-      overpassSorgula(query, `${ilAdi} ilindeki isimsiz camiler`, "#B23A48");
-    } else if (mod === 'tum') {
-      query = `[out:json][timeout:25];
-      (
-        node["amenity"="place_of_worship"]["religion"="muslim"](${bboxStr});
-        way["amenity"="place_of_worship"]["religion"="muslim"](${bboxStr});
-      );
-      out center qt;`;
-      overpassSorgula(query, `${ilAdi} ilindeki tüm camiler`, "#124E3F");
-    }
-  } catch (err) {
-    sayac.innerHTML = `❌ İl sınırları alınırken bir hata oluştu.`;
+  let query = "";
+  if (mod === 'isimsiz') {
+    query = `[out:json][timeout:30];
+    area["ISO3166-2"="TR-${getPlakaNo(ilAdi)}"]->.searchArea;
+    (
+      node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
+      way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
+    );
+    out center qt;`;
+    overpassSorgula(query, `${ilAdi} ilindeki isimsiz camiler`, "#B23A48");
+  } else if (mod === 'tum') {
+    query = `[out:json][timeout:30];
+    area["ISO3166-2"="TR-${getPlakaNo(ilAdi)}"]->.searchArea;
+    (
+      node["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+      way["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+    );
+    out center qt;`;
+    overpassSorgula(query, `${ilAdi} ilindeki tüm camiler`, "#124E3F");
   }
+}
+
+function getPlakaNo(ilAdi) {
+  const index = iller.indexOf(ilAdi);
+  return (index + 1).toString().padStart(2, '0');
 }
 
 function konumlaCamileriBul() {
@@ -365,7 +356,7 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
-      const query = `[out:json][timeout:20];
+      const query = `[out:json][timeout:25];
       (
         node["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
         way["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
@@ -390,25 +381,16 @@ async function camiAra() {
   let query = "";
 
   if (ilAdi) {
-    sayac.innerHTML = `🔍 ${ilAdi} il sınırları sorgulanıyor...`;
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ilAdi)}+Turkey&limit=1`);
-      const data = await res.json();
-      const bbox = data[0].boundingbox;
-      const bboxStr = `${bbox[0]},${bbox[2]},${bbox[1]},${bbox[3]}`;
-
-      query = `[out:json][timeout:25];
-      (
-        node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](${bboxStr});
-        way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](${bboxStr});
-      );
-      out center qt;`;
-      overpassSorgula(query, `${ilAdi} - "${isim}" araması`, "#124E3F");
-    } catch(e) {
-      sayac.innerHTML = "❌ İl sorgulama hatası.";
-    }
+    query = `[out:json][timeout:30];
+    area["ISO3166-2"="TR-${getPlakaNo(ilAdi)}"]->.searchArea;
+    (
+      node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
+      way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
+    );
+    out center qt;`;
+    overpassSorgula(query, `${ilAdi} - "${isim}" araması`, "#124E3F");
   } else {
-    query = `[out:json][timeout:45];
+    query = `[out:json][timeout:40];
     area["ISO3166-1"="TR"]->.trArea;
     (
       node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.trArea);
@@ -419,7 +401,6 @@ async function camiAra() {
   }
 }
 
-/* 🚀 YEDEKLİ VE HIZLI OVERPASS SORGU SİSTEMİ */
 async function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle = true) {
   if (temizle) clusterGroup.clearLayers();
 
@@ -429,55 +410,45 @@ async function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle
   let success = false;
   let data = null;
 
-  // Sırayla sunucuları dene (hangisi önce yanıt verirse)
   for (let i = 0; i < OVERPASS_ENDPOINTS.length; i++) {
     const endpoint = OVERPASS_ENDPOINTS[i];
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniye sınır
-
       const response = await fetch(endpoint, {
         method: "POST",
-        body: query,
-        signal: controller.signal
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(query)
       });
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         data = await response.json();
         success = true;
-        break; // Başarılıysa döngüden çık
+        break;
       }
     } catch (e) {
-      console.warn(`${endpoint} yanıt vermedi, sonraki sunucu deneniyor...`);
+      console.warn(`${endpoint} isteğe yanıt vermedi, deneniyor...`);
     }
   }
 
   if (!success || !data) {
-    sayac.innerHTML = `❌ Sunuculardan yanıt alınamadı. Lütfen daha küçük bir bölge veya isim seçin.`;
+    sayac.innerHTML = `❌ Veriler sunucudan çekilemedi. Lütfen daha dar bir il veya ilçe araması deneyin.`;
     return;
   }
 
-  const uniqueElements = [];
-  const seenIds = new Set();
-
-  (data.elements || []).forEach(el => {
-    const uniqueKey = `${el.type}/${el.id}`;
-    if (seenIds.has(uniqueKey)) return;
-    seenIds.add(uniqueKey);
-    uniqueElements.push(el);
-  });
-
-  const adet = uniqueElements.length;
-  if (adet === 0) {
-    sayac.innerHTML = `❌ ${baslikMetni} için sonuç bulunamadı.`;
+  const elements = data.elements || [];
+  if (elements.length === 0) {
+    sayac.innerHTML = `❌ ${baslikMetni} için kayıt bulunamadı.`;
     return;
   }
 
   const bounds = [];
   const markers = [];
+  const seenIds = new Set();
 
-  uniqueElements.forEach(el => {
+  elements.forEach(el => {
+    const uniqueKey = `${el.type}/${el.id}`;
+    if (seenIds.has(uniqueKey)) return;
+    seenIds.add(uniqueKey);
+
     const lat = el.lat || (el.center && el.center.lat);
     const lon = el.lon || (el.center && el.center.lon);
 
@@ -520,7 +491,7 @@ async function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle
     map.fitBounds(bounds, { padding: [30, 30] });
   }
 
-  sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet bulundu.`;
+  sayac.innerHTML = `📍 ${baslikMetni} – <b>${markers.length}</b> adet veri haritaya yüklendi.`;
 }
 
 </script>
