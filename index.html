@@ -16,32 +16,33 @@
 html, body { height:100%; margin:0; padding:0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: #f7f9f7;
-  color: #1c2e26;
+  background: #f4f7f5;
+  color: #122c22;
   display: flex;
   flex-direction: column;
 }
 
-/* Header - Zümrüt Yeşili Gradient & Altın Çerçeve */
+/* Header - Royal Emerald & Gold */
 header {
-  background: linear-gradient(135deg, #09241c 0%, #154c3c 60%, #1e604d 100%);
+  background: linear-gradient(135deg, #072219 0%, #0e3a2b 50%, #17523f 100%);
   color: #f7f9f7;
   padding: 18px 12px;
   text-align: center;
-  box-shadow: 0 4px 14px rgba(15, 56, 44, 0.35);
-  border-bottom: 2px solid #d4af37;
+  box-shadow: 0 4px 16px rgba(7, 34, 25, 0.4);
+  border-bottom: 3px solid #d4af37;
+  position: relative;
 }
 header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  letter-spacing: 0.5px;
-  color: #f3e5ab;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  letter-spacing: 0.8px;
+  color: #fce8a6;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 .bayrak-img {
   width: 28px;
@@ -50,91 +51,96 @@ header h1 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 header small { 
-  color: #d2e3dc; 
+  color: #c0ded3; 
   opacity: 0.95;
   font-size: 12.5px;
   margin-top: 5px;
   display: block;
   font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
-/* Ayet Kutusu - Açık Zümrüt & Altın Detaylar */
+/* Ayet Kutusu */
 .ayet-box {
-  background: #ebf0ec;
-  color: #0f382c;
+  background: #e5ece8;
+  color: #072219;
   text-align: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid #cce0d6;
+  padding: 12px 16px;
+  border-bottom: 1px solid #c0d1c8;
   font-size: 13.5px;
   line-height: 1.5;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
 }
 .ayet-box strong {
-  color: #aa820a;
+  color: #b58d1d;
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   font-size: 11px;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   font-weight: 700;
 }
 .ayet-kaynak {
   font-size: 11px;
-  color: #154c3c;
+  color: #17523f;
   font-weight: 600;
   margin-top: 4px;
   display: block;
 }
 
-/* Tablar */
+/* Tab Yapısı */
 .tabs {
   display: flex;
-  background: #d8e4dd;
-  border-bottom: 2px solid #b2ccbe;
+  background: #d1dfd7;
+  border-bottom: 2px solid #b1c8bc;
   overflow-x: auto;
 }
 .tab-btn {
   flex: 1;
   min-width: 110px;
-  padding: 12px 10px;
+  padding: 13px 10px;
   border: none;
   background: transparent;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  color: #3d5e51;
+  color: #2b4f41;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+}
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 .tab-btn.active {
-  background: #f7f9f7;
-  color: #0f382c;
+  background: #f4f7f5;
+  color: #072219;
   border-bottom: 3px solid #d4af37;
   font-weight: 700;
 }
 
-/* Filtreler */
+/* Filtre Alanı */
 .filters {
   padding: 14px;
-  background: #f7f9f7;
-  border-bottom: 1px solid #d8e4dd;
+  background: #f4f7f5;
+  border-bottom: 1px solid #d1dfd7;
 }
 .filter-group { display: none; }
 .filter-group.active { display: block; }
 
 select, input {
   width: 100%;
-  padding: 11px;
+  padding: 11px 13px;
   border-radius: 8px;
-  border: 1.5px solid #b2ccbe;
+  border: 1.5px solid #b1c8bc;
   background: #ffffff;
-  color: #0f382c;
+  color: #072219;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 select:focus, input:focus { 
   border-color: #d4af37; 
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
 }
 
 .search-box-group {
@@ -145,56 +151,56 @@ select:focus, input:focus {
 .search-box { display: flex; gap: 8px; }
 .search-box input { flex: 1; }
 
-/* Butonlar - Zümrüt & Gold Dokunuşlar */
+/* Buton Stilleri */
 .btn-action, .btn-location {
   padding: 12px;
-  background: linear-gradient(135deg, #154c3c 0%, #0f382c 100%);
-  color: #f3e5ab;
+  background: linear-gradient(135deg, #0e3a2b 0%, #072219 100%);
+  color: #fce8a6;
   border: 1px solid #d4af37;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(15, 56, 44, 0.25);
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 8px rgba(7, 34, 25, 0.25);
 }
 .btn-action:hover, .btn-location:hover { 
-  background: linear-gradient(135deg, #1e604d 0%, #154c3c 100%);
+  background: linear-gradient(135deg, #17523f 0%, #0e3a2b 100%);
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(15, 56, 44, 0.35);
+  box-shadow: 0 4px 12px rgba(7, 34, 25, 0.35);
 }
 
 #sayac {
-  background: #ebf0ec;
+  background: #e5ece8;
   padding: 10px;
   text-align: center;
   font-size: 13.5px;
   font-weight: 600;
-  color: #0f382c;
-  border-bottom: 1px solid #cce0d6;
+  color: #072219;
+  border-bottom: 1px solid #c0d1c8;
 }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
-/* Popup Stilleri */
-.popup { font-size: 13px; text-align: center; padding: 2px; }
-.popup b { color: #0f382c; display: block; margin-bottom: 2px; font-size: 14.5px; }
-.popup small { color: #5a7a6e; display: block; margin-bottom: 10px; }
+/* Popup Tasarımı */
+.popup { font-size: 13px; text-align: center; padding: 3px; }
+.popup b { color: #072219; display: block; margin-bottom: 3px; font-size: 14.5px; }
+.popup small { color: #4a6b5d; display: block; margin-bottom: 10px; font-size: 11px; }
 .popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 .popup a {
   display: block; text-align: center; padding: 7px 4px; border-radius: 6px;
   text-decoration: none; font-weight: 600; font-size: 11px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.1s;
 }
-.popup a:hover { opacity: 0.9; }
+.popup a:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* Popup Buton Renkleri */
-.osm { background: #154c3c; color: #f3e5ab; border: 1px solid #d4af37; grid-column: span 2; }
-.google { background: #c59b27; color: #fff; }
-.diyanet { background: #0f382c; color: #fff; }
-.mapillary { background: #2d7a5d; color: #fff; }
-.panoramax { background: #506855; color: #fff; }
-.osm-note { background: #a83232; color: #fff; grid-column: span 2; }
+/* Popup İçi Buton Renkleri */
+.osm { background: #0e3a2b; color: #fce8a6; border: 1px solid #d4af37; grid-column: span 2; }
+.google { background: #b88d1d; color: #fff; }
+.diyanet { background: #072219; color: #fff; }
+.mapillary { background: #236b52; color: #fff; }
+.panoramax { background: #455e52; color: #fff; }
+.osm-note { background: #9e2a2a; color: #fff; grid-column: span 2; }
 </style>
 </head>
 
@@ -388,7 +394,6 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
-      /* maxsize eklendi */
       const query = `[out:json][timeout:90][maxsize:1073741824];
       (
         nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
@@ -396,8 +401,8 @@ function konumlaCamileriBul() {
       );
       out center;`;
 
-      /* Zümrüt Yeşili Harita Noktaları (#154c3c) */
-      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#154c3c", false);
+      /* Zümrüt Yeşili Harita Noktaları (#0e3a2b) */
+      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#0e3a2b", false);
     },
     (err) => {
       sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
@@ -419,8 +424,8 @@ function isimsizCamileriGetir(il) {
   );
   out center;`;
 
-  /* Uyarı rengi olarak Yakut / Kırmızı tonu (#b84335) */
-  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
+  /* İsimsiz uyarısı için Koyu Kırmızı (#9e2a2a) */
+  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#9e2a2a");
 }
 
 /* 🕌 TÜM CAMİLER */
@@ -435,8 +440,8 @@ function tumCamileriGetir(il) {
   );
   out center;`;
 
-  /* Zümrüt Yeşili Noktalar (#154c3c) */
-  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#154c3c");
+  /* Zümrüt Yeşili Noktalar (#0e3a2b) */
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#0e3a2b");
 }
 
 /* 🔍 CAMİ ARAMA */
@@ -472,8 +477,8 @@ function camiAra() {
     baslik = `Türkiye geneli - "${isim}" araması`;
   }
 
-  /* Zümrüt Yeşili Noktalar (#154c3c) */
-  overpassSorgula(query, baslik, "#154c3c");
+  /* Zümrüt Yeşili Noktalar (#0e3a2b) */
+  overpassSorgula(query, baslik, "#0e3a2b");
 }
 
 /* 🚀 OVERPASS SORGU */
@@ -549,7 +554,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
       const m = L.circleMarker([lat, lon], {
         radius: 6.5,
-        color: "#d4af37", /* Altın rengi dış halka */
+        color: "#d4af37", /* Parlak altın dış halka */
         weight: 1.5,
         fillColor: noktaRengi,
         fillOpacity: 0.95
