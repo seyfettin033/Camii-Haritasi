@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Türkiye Cemevi Rehberi & Veri Katkı Haritası</title>
+<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Leaflet CSS -->
@@ -16,18 +16,18 @@
 html, body { height:100%; margin:0; padding:0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: #fdfaf6;
-  color: #3e332a;
+  background: #fcf8f2;
+  color: #4a3b32;
   display: flex;
   flex-direction: column;
 }
 
 header {
-  background: linear-gradient(135deg, #2c4a3e 0%, #1b362c 100%);
+  background: linear-gradient(135deg, #4a2c11 0%, #78481d 100%);
   color: #fcf8f2;
   padding: 16px 12px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(27, 54, 44, 0.25);
+  box-shadow: 0 4px 12px rgba(74, 44, 17, 0.25);
 }
 header h1 {
   margin: 0;
@@ -46,7 +46,7 @@ header h1 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 header small { 
-  color: #d2e4dc; 
+  color: #f3e5d8; 
   opacity: 0.9;
   font-size: 12px;
   margin-top: 4px;
@@ -54,26 +54,26 @@ header small {
   font-weight: 300;
 }
 
-.devis-box {
-  background: #eef4f1;
-  color: #234235;
+.ayet-box {
+  background: #f4ece1;
+  color: #5c3a21;
   text-align: center;
   padding: 12px 14px;
-  border-bottom: 1px solid #d4e3dc;
+  border-bottom: 1px solid #e2d2c0;
   font-size: 13px;
   line-height: 1.5;
 }
-.devis-box strong {
-  color: #1b5e3a;
+.ayet-box strong {
+  color: #8c4a1b;
   display: block;
   margin-bottom: 3px;
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.devis-kaynak {
+.ayet-kaynak {
   font-size: 11px;
-  color: #2d7a52;
+  color: #a05a2c;
   font-weight: 600;
   margin-top: 4px;
   display: block;
@@ -81,8 +81,8 @@ header small {
 
 .tabs {
   display: flex;
-  background: #e2ece7;
-  border-bottom: 2px solid #cbdcd4;
+  background: #eae0d0;
+  border-bottom: 2px solid #dcd0bd;
   overflow-x: auto;
 }
 .tab-btn {
@@ -94,20 +94,20 @@ header small {
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  color: #536e62;
+  color: #7a6858;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
 .tab-btn.active {
-  background: #fdfaf6;
-  color: #1b362c;
-  border-bottom: 3px solid #1b362c;
+  background: #fcf8f2;
+  color: #78481d;
+  border-bottom: 3px solid #78481d;
 }
 
 .filters {
   padding: 14px;
-  background: #fdfaf6;
-  border-bottom: 1px solid #e3ede8;
+  background: #fcf8f2;
+  border-bottom: 1px solid #e8dccb;
 }
 .filter-group { display: none; }
 .filter-group.active { display: block; }
@@ -116,14 +116,14 @@ select, input {
   width: 100%;
   padding: 11px;
   border-radius: 8px;
-  border: 1.5px solid #c8dad1;
-  background: #ffffff;
-  color: #3e332a;
+  border: 1.5px solid #d8c8b4;
+  background: #fffdfa;
+  color: #4a3b32;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
 }
-select:focus, input:focus { border-color: #1b362c; }
+select:focus, input:focus { border-color: #78481d; }
 
 .search-box-group {
   display: flex;
@@ -135,7 +135,7 @@ select:focus, input:focus { border-color: #1b362c; }
 
 .btn-action, .btn-location {
   padding: 12px;
-  background: #2c4a3e;
+  background: #78481d;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -143,25 +143,25 @@ select:focus, input:focus { border-color: #1b362c; }
   cursor: pointer;
   width: 100%;
   transition: background 0.2s ease;
-  box-shadow: 0 2px 6px rgba(44, 74, 62, 0.2);
+  box-shadow: 0 2px 6px rgba(120, 72, 29, 0.2);
 }
-.btn-action:hover, .btn-location:hover { background: #1b362c; }
+.btn-action:hover, .btn-location:hover { background: #5a3413; }
 
 #sayac {
-  background: #eef4f1;
+  background: #f4ece1;
   padding: 10px;
   text-align: center;
   font-size: 13.5px;
   font-weight: 600;
-  color: #234235;
-  border-bottom: 1px solid #d4e3dc;
+  color: #5c4232;
+  border-bottom: 1px solid #e4d7c5;
 }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
 .popup { font-size: 13px; text-align: center; padding: 2px; }
-.popup b { color: #1b362c; display: block; margin-bottom: 2px; font-size: 14px; }
-.popup small { color: #698277; display: block; margin-bottom: 10px; }
+.popup b { color: #5a3413; display: block; margin-bottom: 2px; font-size: 14px; }
+.popup small { color: #8c7868; display: block; margin-bottom: 10px; }
 .popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 .popup a {
   display: block; text-align: center; padding: 7px 4px; border-radius: 6px;
@@ -170,11 +170,12 @@ select:focus, input:focus { border-color: #1b362c; }
 }
 .popup a:hover { opacity: 0.9; }
 
-.osm { background: #2c4a3e; color: #fff; grid-column: span 2; }
+.osm { background: #78481d; color: #fff; grid-column: span 2; }
 .google { background: #d9a74a; color: #fff; }
+.diyanet { background: #b84335; color: #fff; }
 .mapillary { background: #4a7c59; color: #fff; }
 .panoramax { background: #6b5b95; color: #fff; }
-.osm-note { background: #b84335; color: #fff; grid-column: span 2; }
+.osm-note { background: #a83232; color: #fff; grid-column: span 2; }
 </style>
 </head>
 
@@ -183,40 +184,40 @@ select:focus, input:focus { border-color: #1b362c; }
 <header>
   <h1>
     <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
-    Türkiye Cemevi Rehberi
+    Türkiye Camii Rehberi
   </h1>
   <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
 </header>
 
-<div class="devis-box">
-  <strong>🌿 GÜNÜN SÖZÜ / Deyişi</strong>
-  <span id="devis-metin">"Gelin canlar bir olalım, işi kolay kılalım..."</span>
-  <span id="devis-kaynak" class="devis-kaynak">(Yunusemre)</span>
+<div class="ayet-box">
+  <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
+  <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."</span>
+  <span id="ayet-sure" class="ayet-kaynak">(Tevbe Suresi, 18. Ayet)</span>
 </div>
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Cemevleri</button>
-  <button class="tab-btn" onclick="switchTab('tum')">🪔 Tüm Cemevleri</button>
-  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cemevi Ara</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
+  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
 </div>
 
 <div class="filters">
 
   <div id="group-konum" class="filter-group active">
-    <button class="btn-location" onclick="konumlaCemevleriBul()">
-      📍 Bulunduğum Konuma Göre Yakındaki Cemevlerini Göster
+    <button class="btn-location" onclick="konumlaCamileriBul()">
+      📍 Bulunduğum Konuma Göre Yakındaki Camileri Göster
     </button>
   </div>
 
   <div id="group-isimsiz" class="filter-group">
-    <select id="il-isimsiz" onchange="isimsizCemevleriGetir(this.value)">
+    <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
       <option value="">Lütfen il seçiniz</option>
     </select>
   </div>
 
   <div id="group-tum" class="filter-group">
-    <select id="il-tum" onchange="tumCemevleriGetir(this.value)">
+    <select id="il-tum" onchange="tumCamileriGetir(this.value)">
       <option value="">Lütfen il seçiniz</option>
     </select>
   </div>
@@ -230,18 +231,18 @@ select:focus, input:focus { border-color: #1b362c; }
       <div class="search-box">
         <input
           type="text"
-          id="cemevi-ismi"
-          placeholder="Cemevi adı veya kelime girin (Örn: Şah Kulu, Karacaahmet)"
-          onkeyup="if(event.key==='Enter') cemeviAra()"
+          id="cami-ismi"
+          placeholder="Cami adı veya kelime girin (Örn: Süleymaniye, Hacı)"
+          onkeyup="if(event.key==='Enter') camiAra()"
         >
-        <button class="btn-action" style="width:auto;" onclick="cemeviAra()">Ara</button>
+        <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
       </div>
     </div>
   </div>
 
 </div>
 
-<div id="sayac">Yakındaki cemevlerini bulmak için butona basın.</div>
+<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
 
 <div id="map"></div>
 
@@ -251,31 +252,27 @@ select:focus, input:focus { border-color: #1b362c; }
 
 <script>
 
-const deyişler = [
+const ayetler = [
   {
-    metin: "Gelin canlar bir olalım, sevelim sevilelim, dünya kimseye kalmaz.",
-    kaynak: "(Yunus Emre)"
+    metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.",
+    sure: "(Tevbe Suresi, 18. Ayet)"
   },
   {
-    metin: "Elin açık, kapın açık, sofranın açık olsun.",
-    kaynak: "(Hacı Bektaş-ı Veli)"
+    metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.",
+    sure: "(Ankebût Suresi, 45. Ayet)"
   },
   {
-    metin: "Okunacak en büyük kitap insandır.",
-    kaynak: "(Hacı Bektaş-ı Veli)"
-  },
-  {
-    metin: "Dili, dini, rengi ne olursa olsun; iyiler iyidir.",
-    kaynak: "(Hacı Bektaş-ı Veli)"
+    metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.",
+    sure: "(Râd Suresi, 28. Ayet)"
   }
 ];
 
-function deyişGetir() {
-  const r = deyişler[Math.floor(Math.random() * deyişler.length)];
-  document.getElementById("devis-metin").innerText = `"${r.metin}"`;
-  document.getElementById("devis-kaynak").innerText = r.kaynak;
+function ayetGetir() {
+  const r = ayetler[Math.floor(Math.random() * ayetler.length)];
+  document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
+  document.getElementById("ayet-sure").innerText = r.sure;
 }
-deyişGetir();
+ayetGetir();
 
 const iller = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
@@ -306,6 +303,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap katkıda bulunanlar'
 }).addTo(map);
 
+/* Yüksek miktarda veriyi kasılmadan yönetmek için MarkerClusterGroup kullanılıyor */
 const clusterGroup = L.markerClusterGroup({
   chunkedLoading: true,
   maxClusterRadius: 50
@@ -342,7 +340,7 @@ function switchTab(mode) {
 }
 
 /* 📍 KONUM BULMA */
-function konumlaCemevleriBul() {
+function konumlaCamileriBul() {
   const sayac = document.getElementById("sayac");
 
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
@@ -369,21 +367,16 @@ function konumlaCemevleriBul() {
       clusterGroup.addLayer(userMarker);
       userMarker.openPopup();
 
-      map.setView([lat, lon], 12);
+      map.setView([lat, lon], 14);
 
-      /* OSM'deki Cemevi etiketleme standartları: 
-         amenity=place_of_worship + religion=alevi/alawite VEYA amenity=cemevi VEYA isminde 'cemevi' geçen ibadethaneler
-      */
       const query = `[out:json][timeout:90][maxsize:1073741824];
       (
-        nwr["amenity"="place_of_worship"]["religion"~"alevi|alawite",i](around:25000, ${lat}, ${lon});
-        nwr["amenity"="cemevi"](around:25000, ${lat}, ${lon});
-        nwr["amenity"="place_of_worship"]["name"~"cemevi|cem evi",i](around:25000, ${lat}, ${lon});
-        nwr["building"="cemevi"](around:25000, ${lat}, ${lon});
+        nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
+        nwr["building"="mosque"](around:5000, ${lat}, ${lon});
       );
       out center;`;
 
-      overpassSorgula(query, "Yakınınızdaki cemevleri (25 km yarıçap)", "#2c4a3e", false);
+      overpassSorgula(query, "Yakınınızdaki camiler (5 km yarıçap)", "#78481d", false);
     },
     (err) => {
       sayac.innerHTML = "❌ Konum alınamadı. Tarayıcınızdan konum iznini kontrol edin.";
@@ -393,46 +386,43 @@ function konumlaCemevleriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CEMEVLERİ */
-function isimsizCemevleriGetir(il) {
+/* ⚠️ İSİMSİZ CAMİLER */
+function isimsizCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"~"alevi|alawite",i]["name"~"^$"](area.searchArea);
-    nwr["amenity"="cemevi"]["name"~"^$"](area.searchArea);
-    nwr["building"="cemevi"]["name"~"^$"](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"^$"](area.searchArea);
+    nwr["building"="mosque"]["name"~"^$"](area.searchArea);
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki isimsiz cemevleri`, "#b84335");
+  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#b84335");
 }
 
-/* 🪔 TÜM CEMEVLERİ */
-function tumCemevleriGetir(il) {
+/* 🕌 TÜM CAMİLER */
+function tumCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"~"alevi|alawite",i](area.searchArea);
-    nwr["amenity"="cemevi"](area.searchArea);
-    nwr["amenity"="place_of_worship"]["name"~"cemevi|cem evi",i](area.searchArea);
-    nwr["building"="cemevi"](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+    nwr["building"="mosque"](area.searchArea);
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki tüm cemevleri`, "#2c4a3e");
+  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#78481d");
 }
 
-/* 🔍 CEMEVİ ARAMA */
-function cemeviAra() {
-  const isim = document.getElementById("cemevi-ismi").value.trim();
+/* 🔍 CAMİ ARAMA */
+function camiAra() {
+  const isim = document.getElementById("cami-ismi").value.trim();
   const seciliIl = document.getElementById("il-arama").value;
 
   if (!isim) {
-    return alert("Lütfen aranacak cemevi adını veya bir kelime girin.");
+    return alert("Lütfen aranacak cami adını veya bir kelime girin.");
   }
 
   const guvenliIsim = isim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -443,9 +433,8 @@ function cemeviAra() {
     query = `[out:json][timeout:180][maxsize:1073741824];
     area["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
     (
-      nwr["amenity"="place_of_worship"]["name"~"${guvenliIsim}",i](area.searchArea);
-      nwr["amenity"="cemevi"]["name"~"${guvenliIsim}",i](area.searchArea);
-      nwr["building"="cemevi"]["name"~"${guvenliIsim}",i](area.searchArea);
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
+      nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.searchArea);
     );
     out center;`;
     baslik = `${seciliIl} - "${isim}" araması`;
@@ -453,16 +442,14 @@ function cemeviAra() {
     query = `[out:json][timeout:180][maxsize:1073741824];
     area["ISO3166-1"="TR"]->.trArea;
     (
-      nwr["amenity"="place_of_worship"]["religion"~"alevi|alawite",i]["name"~"${guvenliIsim}",i](area.trArea);
-      nwr["amenity"="cemevi"]["name"~"${guvenliIsim}",i](area.trArea);
-      nwr["amenity"="place_of_worship"]["name"~"cemevi|cem evi",i]["name"~"${guvenliIsim}",i](area.trArea);
-      nwr["building"="cemevi"]["name"~"${guvenliIsim}",i](area.trArea);
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.trArea);
+      nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.trArea);
     );
     out center;`;
     baslik = `Türkiye geneli - "${isim}" araması`;
   }
 
-  overpassSorgula(query, baslik, "#2c4a3e");
+  overpassSorgula(query, baslik, "#78481d");
 }
 
 /* 🚀 OVERPASS SORGU */
@@ -491,7 +478,13 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
       if (seenIds.has(uniqueKey)) return;
       seenIds.add(uniqueKey);
 
-      uniqueElements.push(el);
+      const name = (el.tags && el.tags.name) ? el.tags.name.toLowerCase() : "";
+      const isOtherWorship = name.includes("kilise") || name.includes("church") || 
+                             name.includes("havra") || name.includes("sinagog") || name.includes("synagogue");
+
+      if (!isOtherWorship) {
+        uniqueElements.push(el);
+      }
     });
 
     const adet = uniqueElements.length;
@@ -511,17 +504,18 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
       if (lat === undefined || lon === undefined) return;
 
-      const hamCemeviAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cemevi";
-      const guvenliCemeviAdi = escapeHtml(hamCemeviAdi);
+      const hamCamiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
+      const guvenliCamiAdi = escapeHtml(hamCamiAdi);
 
       bounds.push([lat, lon]);
 
       const popup = `
       <div class="popup">
-        <b>${guvenliCemeviAdi}</b>
+        <b>${guvenliCamiAdi}</b>
         <small>ID: ${el.type}/${el.id}</small>
         <div class="popup-links">
           <a class="google" target="_blank" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
+          <a class="diyanet" target="_blank" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
           <a class="mapillary" target="_blank" href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">📸 Mapillary</a>
           <a class="panoramax" target="_blank" href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">📷 Panoramax</a>
           <a class="osm" target="_blank" href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">✍️ OSM'de Düzenle</a>
@@ -530,7 +524,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
       </div>`;
 
       const m = L.circleMarker([lat, lon], {
-        radius: 7,
+        radius: 6.5,
         color: "#ffffff",
         weight: 2,
         fillColor: noktaRengi,
