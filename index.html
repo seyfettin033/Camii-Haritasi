@@ -248,7 +248,7 @@ select:focus, input:focus { border-color: #78481d; }
 
 <!-- Leaflet & MarkerCluster JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
 <script>
 
@@ -303,7 +303,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap katkıda bulunanlar'
 }).addTo(map);
 
-/* Yüksek miktarda veriyi kasılmadan yönetmek için MarkerClusterGroup kullanılıyor */
+/* Yüksek miktarda veriyi kasmadan yönetmek için MarkerClusterGroup kullanıyoruz */
 const clusterGroup = L.markerClusterGroup({
   chunkedLoading: true,
   maxClusterRadius: 50
@@ -369,6 +369,7 @@ function konumlaCamileriBul() {
 
       map.setView([lat, lon], 14);
 
+      /* maxsize eklendi */
       const query = `[out:json][timeout:90][maxsize:1073741824];
       (
         nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
@@ -390,6 +391,7 @@ function konumlaCamileriBul() {
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
+  /* Esnek il arama ve maxsize eklendi */
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
@@ -405,6 +407,7 @@ function isimsizCamileriGetir(il) {
 function tumCamileriGetir(il) {
   if (!il) return;
 
+  /* Esnek il arama ve maxsize eklendi */
   const query = `[out:json][timeout:180][maxsize:1073741824];
   area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
@@ -534,6 +537,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
       markers.push(m);
     });
 
+    /* Tüm markerlar tek seferde cluster grubuna verilir */
     clusterGroup.addLayers(markers);
 
     if (bounds.length > 0 && temizle) {
