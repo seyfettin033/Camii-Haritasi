@@ -279,7 +279,7 @@ select:focus, input:focus {
 
 </div>
 
-<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
+<div id="sayac">Lütfen yukarıdaki sekmelerden bir işlem seçin.</div>
 
 <div id="map"></div>
 
@@ -309,7 +309,6 @@ function ayetGetir() {
   document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
   document.getElementById("ayet-sure").innerText = r.sure;
 }
-ayetGetir();
 
 const iller = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
@@ -322,15 +321,25 @@ const iller = [
   "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
 
-const ilSelectIsimsiz = document.getElementById("il-isimsiz");
-const ilSelectTum = document.getElementById("il-tum");
-const ilSelectArama = document.getElementById("il-arama");
+function illeriDoldur() {
+  const ilSelectIsimsiz = document.getElementById("il-isimsiz");
+  const ilSelectTum = document.getElementById("il-tum");
+  const ilSelectArama = document.getElementById("il-arama");
 
-iller.forEach((il, index) => {
-  const plaka = (index + 1).toString().padStart(2, '0');
-  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
+  if (!ilSelectIsimsiz || !ilSelectTum || !ilSelectArama) return;
+
+  iller.forEach((il, index) => {
+    const plaka = (index + 1).toString().padStart(2, '0');
+    ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
+    ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
+    ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
+  });
+}
+
+// DOM Yüklendiğinde İlleri ve Ayeti Hazırla
+document.addEventListener("DOMContentLoaded", () => {
+  ayetGetir();
+  illeriDoldur();
 });
 
 const map = L.map('map').setView([39, 35], 6);
@@ -340,7 +349,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap katkıda bulunanlar'
 }).addTo(map);
 
-/* Yüksek miktarda veriyi kasmadan yönetmek için MarkerClusterGroup */
 const clusterGroup = L.markerClusterGroup({
   chunkedLoading: true,
   maxClusterRadius: 50
@@ -423,7 +431,7 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER (Düzeltilen Hassas Sorgu) */
+/* ⚠️ İSİMSİZ CAMİLER */
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
@@ -562,7 +570,7 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
       const m = L.circleMarker([lat, lon], {
         radius: 6.5,
-        color: "#d4af37", /* Parlak Altın Çerçeve */
+        color: "#d4af37",
         weight: 1.5,
         fillColor: noktaRengi,
         fillOpacity: 0.95
