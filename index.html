@@ -131,6 +131,14 @@ header small {
 .filter-group { display: none; }
 .filter-group.active { display: block; }
 
+.form-label {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--zumrut-koyu);
+  margin-bottom: 6px;
+}
+
 select, input {
   width: 100%;
   padding: 11px;
@@ -141,6 +149,7 @@ select, input {
   font-size: 14px;
   outline: none;
   transition: all 0.2s;
+  cursor: pointer;
 }
 select:focus, input:focus { 
   border-color: var(--gold-soft);
@@ -153,7 +162,7 @@ select:focus, input:focus {
   gap: 10px;
 }
 .search-box { display: flex; gap: 8px; }
-.search-box input { flex: 1; }
+.search-box input { flex: 1; cursor: text; }
 
 .btn-action, .btn-location {
   padding: 12px;
@@ -184,7 +193,6 @@ select:focus, input:focus {
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
-/* Custom Marker Cluster Styling (Gold/Emerald) */
 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
   background-color: rgba(18, 78, 63, 0.6) !important;
 }
@@ -248,28 +256,33 @@ select:focus, input:focus {
   </div>
 
   <div id="group-isimsiz" class="filter-group">
+    <label class="form-label" for="il-isimsiz">📌 İsimsiz camileri listelemek için il seçiniz:</label>
     <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
-      <option value="">Lütfen il seçiniz</option>
+      <option value="">-- İl Seçiniz --</option>
     </select>
   </div>
 
   <div id="group-tum" class="filter-group">
+    <label class="form-label" for="il-tum">📌 Tüm camileri listelemek için il seçiniz:</label>
     <select id="il-tum" onchange="tumCamileriGetir(this.value)">
-      <option value="">Lütfen il seçiniz</option>
+      <option value="">-- İl Seçiniz --</option>
     </select>
   </div>
 
   <div id="group-arama" class="filter-group">
     <form onsubmit="event.preventDefault(); camiAra();" class="search-box-group">
-      <select id="il-arama">
-        <option value="">Tüm Türkiye Geneli</option>
-      </select>
+      <div>
+        <label class="form-label" for="il-arama">📌 Arama Yapılacak Bölge:</label>
+        <select id="il-arama">
+          <option value="">Tüm Türkiye Geneli</option>
+        </select>
+      </div>
 
       <div class="search-box">
         <input
           type="text"
           id="cami-ismi"
-          placeholder="Cami adı veya kelime girin (Örn: Süleymaniye, Hacı)"
+          placeholder="Cami adı girin (Örn: Süleymaniye, Ulu, Hacı)"
         >
         <button type="submit" class="btn-action" style="width:auto;">Ara</button>
       </div>
@@ -278,13 +291,13 @@ select:focus, input:focus {
 
 </div>
 
-<div id="sayac">Yakındaki camileri bulmak için butona basın.</div>
+<div id="sayac">Lütfen yukarıdaki menüden işlem seçiniz.</div>
 
 <div id="map"></div>
 
 <!-- Leaflet & MarkerCluster JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
 <script>
 
@@ -321,15 +334,21 @@ const iller = [
   "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
 
-const ilSelectIsimsiz = document.getElementById("il-isimsiz");
-const ilSelectTum = document.getElementById("il-tum");
-const ilSelectArama = document.getElementById("il-arama");
+// Sayfa yüklendiğinde il listelerini doldurmayı garantiye alan fonksiyon
+document.addEventListener("DOMContentLoaded", function() {
+  const ilSelectIsimsiz = document.getElementById("il-isimsiz");
+  const ilSelectTum = document.getElementById("il-tum");
+  const ilSelectArama = document.getElementById("il-arama");
 
-iller.forEach((il, index) => {
-  const plaka = (index + 1).toString().padStart(2, '0');
-  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
+  iller.forEach((il, index) => {
+    const plakaNo = (index + 1).toString().padStart(2, '0');
+    // Değer olarak hem plaka hem il adı objesi veriyoruz
+    const valObj = JSON.stringify({ plaka: plakaNo, isim: il });
+
+    ilSelectIsimsiz.add(new Option(`${plakaNo} - ${il}`, valObj));
+    ilSelectTum.add(new Option(`${plakaNo} - ${il}`, valObj));
+    ilSelectArama.add(new Option(`${plakaNo} - ${il}`, valObj));
+  });
 });
 
 const map = L.map('map').setView([39, 35], 6);
@@ -362,15 +381,19 @@ function switchTab(mode) {
   if (mode === 'konum') {
     document.querySelectorAll('.tab-btn')[0].classList.add('active');
     document.getElementById('group-konum').classList.add('active');
+    document.getElementById('sayac').innerHTML = "Yakındaki camileri bulmak için butona basın.";
   } else if (mode === 'isimsiz') {
     document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('group-isimsiz').classList.add('active');
+    document.getElementById('sayac').innerHTML = "Lütfen listeden bir il seçiniz.";
   } else if (mode === 'tum') {
     document.querySelectorAll('.tab-btn')[2].classList.add('active');
     document.getElementById('group-tum').classList.add('active');
+    document.getElementById('sayac').innerHTML = "Lütfen listeden bir il seçiniz.";
   } else {
     document.querySelectorAll('.tab-btn')[3].classList.add('active');
     document.getElementById('group-arama').classList.add('active');
+    document.getElementById('sayac').innerHTML = "Cami adı girip 'Ara' butonuna basın.";
   }
 }
 
@@ -421,47 +444,61 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER (Hata Düzeltildi) */
-function isimsizCamileriGetir(il) {
-  if (!il) return;
+/* ⚠️ İSİMSİZ CAMİLER (ISO3166-2 Destekli Kesin Sorgu) */
+function isimsizCamileriGetir(val) {
+  if (!val) return;
 
-  // ÇÖZÜM: ["name"!~"."] ile ismi olmayan (name etiketi tanımlanmamış) elemanları sorguluyoruz.
+  const ilData = JSON.parse(val);
+  const ilIsim = ilData.isim;
+  const plaka = ilData.plaka;
+
+  // OSM ISO plaka kodu (TR-34, TR-06 vb.) ve isim eşleştirmesi
   const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  (
+    area["admin_level"="4"]["ISO3166-2"="TR-${plaka}"];
+    area["admin_level"="4"]["name"~"${ilIsim}",i];
+  )->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.searchArea);
     nwr["building"="mosque"]["name"!~"."](area.searchArea);
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#B23A48");
+  overpassSorgula(query, `${ilIsim} ilindeki isimsiz camiler`, "#B23A48");
 }
 
-/* 🕌 TÜM CAMİLER */
-function tumCamileriGetir(il) {
-  if (!il) return;
+/* 🕌 TÜM CAMİLER (ISO3166-2 Destekli Kesin Sorgu) */
+function tumCamileriGetir(val) {
+  if (!val) return;
+
+  const ilData = JSON.parse(val);
+  const ilIsim = ilData.isim;
+  const plaka = ilData.plaka;
 
   const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  (
+    area["admin_level"="4"]["ISO3166-2"="TR-${plaka}"];
+    area["admin_level"="4"]["name"~"${ilIsim}",i];
+  )->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
     nwr["building"="mosque"](area.searchArea);
   );
   out center;`;
 
-  overpassSorgula(query, `${il} ilindeki tüm camiler`, "#124E3F");
+  overpassSorgula(query, `${ilIsim} ilindeki tüm camiler`, "#124E3F");
 }
 
 /* 🔍 CAMİ ARAMA */
 function camiAra() {
   const isim = document.getElementById("cami-ismi").value.trim();
-  const seciliIl = document.getElementById("il-arama").value;
+  const seciliIlVal = document.getElementById("il-arama").value;
 
   if (!isim) {
     return alert("Lütfen aranacak cami adını veya bir kelime girin.");
   }
 
-  if (!seciliIl && isim.length < 3) {
+  if (!seciliIlVal && isim.length < 3) {
     return alert("Türkiye geneli aramalarda lütfen en az 3 karakter girin.");
   }
 
@@ -469,15 +506,22 @@ function camiAra() {
   let query = "";
   let baslik = "";
 
-  if (seciliIl) {
+  if (seciliIlVal) {
+    const ilData = JSON.parse(seciliIlVal);
+    const ilIsim = ilData.isim;
+    const plaka = ilData.plaka;
+
     query = `[out:json][timeout:180][maxsize:1073741824];
-    area["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
+    (
+      area["admin_level"="4"]["ISO3166-2"="TR-${plaka}"];
+      area["admin_level"="4"]["name"~"${ilIsim}",i];
+    )->.searchArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
       nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.searchArea);
     );
     out center;`;
-    baslik = `${seciliIl} - "${isim}" araması`;
+    baslik = `${ilIsim} - "${isim}" araması`;
   } else {
     query = `[out:json][timeout:180][maxsize:1073741824];
     area["ISO3166-1"="TR"]->.trArea;
@@ -548,7 +592,6 @@ function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle = tru
       const hamCamiAdi = hasName ? el.tags.name : "❗ İsimsiz Cami";
       const guvenliCamiAdi = escapeHtml(hamCamiAdi);
 
-      // İsimsiz camiler her zaman belirgin kırmızı/bordo renkte vurgulanır
       const noktaRengi = hasName ? varsayilanNoktaRengi : "#B23A48";
 
       bounds.push([lat, lon]);
@@ -569,7 +612,7 @@ function overpassSorgula(query, baslikMetni, varsayilanNoktaRengi, temizle = tru
 
       const m = L.circleMarker([lat, lon], {
         radius: 6.5,
-        color: "#D4AF37", // Altın varaklı dış çizgi
+        color: "#D4AF37",
         weight: 1.5,
         fillColor: noktaRengi,
         fillOpacity: 0.95
