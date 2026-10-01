@@ -313,18 +313,9 @@ select:focus, input:focus {
 let mevcutCamiVerileri = [];
 
 const ayetler = [
-  {
-    metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.",
-    sure: "(Tevbe Suresi, 18. Ayet)"
-  },
-  {
-    metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.",
-    sure: "(Ankebût Suresi, 45. Ayet)"
-  },
-  {
-    metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.",
-    sure: "(Râd Suresi, 28. Ayet)"
-  }
+  { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
+  { metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.", sure: "(Ankebût Suresi, 45. Ayet)" },
+  { metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.", sure: "(Râd Suresi, 28. Ayet)" }
 ];
 
 function ayetGetir() {
@@ -447,27 +438,27 @@ function konumlaCamileriBul() {
   );
 }
 
-/* ⚠️ İSİMSİZ CAMİLER */
+/* ⚠️ İSİMSİZ CAMİLER - DÜZELTİLMİŞ SORGU */
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  area["boundary"="administrative"]["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
-    nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"^$"](area.searchArea);
-    nwr["building"="mosque"]["name"~"^$"](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](!name)(area.searchArea);
+    nwr["building"="mosque"](!name)(area.searchArea);
   );
   out center;`;
 
   overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#e74c3c");
 }
 
-/* 🕌 TÜM CAMİLER */
+/* 🕌 TÜM CAMİLER - DÜZELTİLMİŞ SORGU */
 function tumCamileriGetir(il) {
   if (!il) return;
 
   const query = `[out:json][timeout:180][maxsize:1073741824];
-  area["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  area["boundary"="administrative"]["admin_level"="4"]["name"~"${il}",i]->.searchArea;
   (
     nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
     nwr["building"="mosque"](area.searchArea);
@@ -492,7 +483,7 @@ function camiAra() {
 
   if (seciliIl) {
     query = `[out:json][timeout:180][maxsize:1073741824];
-    area["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
+    area["boundary"="administrative"]["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
     (
       nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${guvenliIsim}",i](area.searchArea);
       nwr["building"="mosque"]["name"~"${guvenliIsim}",i](area.searchArea);
@@ -572,7 +563,6 @@ function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
       const rawName = (el.tags && el.tags.name) ? el.tags.name : "İsimsiz Cami";
       const guvenliCamiAdi = escapeHtml(rawName);
 
-      // Excel İndirme dizisine ekle
       mevcutCamiVerileri.push({
         "OSM_ID": `${el.type}/${el.id}`,
         "Cami Adı": rawName,
@@ -639,19 +629,18 @@ function excelIndir() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Camiler");
 
-  // Kolon genişliklerini otomatik ayarla
   const max_width = mevcutCamiVerileri.reduce((w, r) => Math.max(w, (r["Cami Adı"] || "").length), 10);
   worksheet["!cols"] = [
-    { wch: 15 }, // ID
-    { wch: Math.max(max_width, 25) }, // Cami Adı
-    { wch: 12 }, // Lat
-    { wch: 12 }, // Lon
-    { wch: 20 }, // Sokak
-    { wch: 15 }, // Mahalle
-    { wch: 15 }, // İlçe
-    { wch: 15 }, // İl
-    { wch: 35 }, // OSM Link
-    { wch: 35 }  // Google Link
+    { wch: 15 },
+    { wch: Math.max(max_width, 25) },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 35 },
+    { wch: 35 }
   ];
 
   const tarih = new Date().toISOString().slice(0, 10);
