@@ -25,6 +25,7 @@ header {
   text-align: center;
   box-shadow: 0 4px 15px rgba(9, 44, 34, 0.4);
   border-bottom: 2px solid #d4af37;
+  position: relative;
 }
 header h1 {
   margin: 0;
@@ -51,6 +52,35 @@ header small {
   display: block;
   font-weight: 400;
   letter-spacing: 0.3px;
+}
+
+/* En üstteki Yenile Butonu */
+.btn-refresh-top {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid #d4af37;
+  color: #f3e8c9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-refresh-top:hover {
+  background: #d4af37;
+  color: #092c22;
+}
+
+@media (max-width: 600px) {
+  header { padding-right: 80px; }
+  .btn-refresh-top { padding: 6px 8px; font-size: 11px; }
 }
 
 .ayet-box {
@@ -157,14 +187,37 @@ select:focus, input:focus {
   color: #ffffff;
 }
 
-#sayac {
+/* Sayac ve CSV İndirme Alanı */
+#sayac-container {
   background: #e2ede7;
-  padding: 10px;
-  text-align: center;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #c8dbc8;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#sayac {
   font-size: 13.5px;
   font-weight: 600;
   color: #0d3b2e;
-  border-bottom: 1px solid #c8dbc8;
+}
+.btn-csv {
+  background: #15513f;
+  color: #f3e8c9;
+  border: 1px solid #d4af37;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: none;
+  transition: all 0.2s;
+}
+.btn-csv:hover {
+  background: #092c22;
+  color: #ffffff;
 }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
@@ -197,6 +250,9 @@ select:focus, input:focus {
     Türkiye Camii Rehberi
   </h1>
   <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
+  <button class="btn-refresh-top" onclick="window.location.reload()" title="Sayfayı Yenile">
+    🔄 Yenile
+  </button>
 </header>
 
 <div class="ayet-box">
@@ -244,7 +300,11 @@ select:focus, input:focus {
   </div>
 </div>
 
-<div id="sayac">Lütfen yukarıdaki seçeneklerden birini seçin.</div>
+<div id="sayac-container">
+  <div id="sayac">Lütfen yukarıdaki seçeneklerden birini seçin.</div>
+  <button id="btn-csv" class="btn-csv" onclick="csvIndir()">📥 CSV İndir</button>
+</div>
+
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -290,8 +350,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 
 const layer = L.layerGroup().addTo(map);
 
 let currentAbortController = null;
+let yuklenenVeriler = []; // CSV İndirme için global hafıza
 
-// En stabil Overpass uç noktaları
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://lz4.overpass-api.de/api/interpreter",
@@ -302,6 +362,8 @@ function switchTab(mode) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
   layer.clearLayers();
+  yuklenenVeriler = [];
+  document.getElementById("btn-csv").style.display = "none";
 
   if (currentAbortController) {
     currentAbortController.abort();
@@ -331,6 +393,7 @@ function konumlaCamileriBul() {
   }
 
   sayac.innerHTML = "📡 Konumunuz tespit ediliyor...";
+  document.getElementById("btn-csv").style.display = "none";
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -376,7 +439,6 @@ function isimsizCamileriGetir(il) {
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  // Performans optimize edilmiş il içi sorgusu
   const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"="${il}"]->.a;
   (
@@ -426,7 +488,9 @@ function camiAra() {
 async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   if (temizle) layer.clearLayers();
   const sayac = document.getElementById("sayac");
+  const btnCsv = document.getElementById("btn-csv");
   sayac.innerHTML = `⏳ Veriler yükleniyor, lütfen bekleyin...`;
+  btnCsv.style.display = "none";
 
   if (currentAbortController) {
     currentAbortController.abort();
@@ -467,6 +531,7 @@ async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
 
 function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   const sayac = document.getElementById("sayac");
+  const btnCsv = document.getElementById("btn-csv");
   
   if (!data || !data.elements) {
     sayac.innerHTML = `❌ Veri yanıtı alınamadı.`;
@@ -492,15 +557,28 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   }
 
   sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet gösteriliyor.`;
+  btnCsv.style.display = "inline-block";
 
+  yuklenenVeriler = []; // CSV için verileri derle
   const bounds = [];
+
   uniqueElements.forEach(el => {
     const lat = el.lat || (el.center && el.center.lat);
     const lon = el.lon || (el.center && el.center.lon);
     
     if (!lat || !lon) return;
 
-    const camiAdi = (el.tags && el.tags.name) ? el.tags.name : "❗ İsimsiz Cami";
+    const camiAdi = (el.tags && el.tags.name) ? el.tags.name : "İsimsiz Cami";
+    
+    yuklenenVeriler.push({
+      adi: camiAdi,
+      lat: lat,
+      lon: lon,
+      type: el.type,
+      id: el.id,
+      link: `https://www.openstreetmap.org/${el.type}/${el.id}`
+    });
+
     bounds.push([lat, lon]);
 
     const popup = `
@@ -529,6 +607,31 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   if (bounds.length > 0 && temizle) {
     map.fitBounds(bounds, { padding: [30, 30] });
   }
+}
+
+// CSV İndirme Fonksiyonu
+function csvIndir() {
+  if (yuklenenVeriler.length === 0) {
+    alert("İndirilecek veri bulunamadı.");
+    return;
+  }
+
+  let csvContent = "\uFEFF"; // UTF-8 BOM ekleyerek Türkçe karakter problemini çözer
+  csvContent += "Cami Adı;Enlem;Boylam;OSM Tipi;OSM ID;OSM Linki\n";
+
+  yuklenenVeriler.forEach(row => {
+    const temizAd = `"${row.adi.replace(/"/g, '""')}"`;
+    csvContent += `${temizAd};${row.lat};${row.lon};${row.type};${row.id};${row.link}\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `camiler_listesi_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 </script>
 
