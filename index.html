@@ -421,6 +421,21 @@ function konumlaCamileriBul() {
   );
 }
 
+function isimsizCamileriGetir(il) {
+  if (!il) return;
+
+  const query = `[out:json][timeout:90];
+  area["admin_level"="4"]["name"="${il}"]->.a;
+  (
+    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    relation["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+  );
+  out center qt;`;
+
+  overpassSorgula(query, `${il} - İsimsiz Camiler`, "#a83232");
+}
+
 function tumCamileriGetir(il) {
   if (!il) return;
 
@@ -622,4 +637,3 @@ function csvIndir() {
 
 </body>
 </html>
-
