@@ -54,7 +54,6 @@ header small {
   letter-spacing: 0.3px;
 }
 
-/* En üstteki Yenile Butonu */
 .btn-refresh-top {
   position: absolute;
   right: 14px;
@@ -113,11 +112,12 @@ header small {
   background: #092c22;
   border-bottom: 2px solid #d4af37;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .tab-btn {
-  flex: 1;
-  min-width: 110px;
-  padding: 13px 10px;
+  flex: 0 0 auto;
+  min-width: 120px;
+  padding: 13px 12px;
   border: none;
   background: transparent;
   font-weight: 600;
@@ -187,7 +187,6 @@ select:focus, input:focus {
   color: #ffffff;
 }
 
-/* Sayac ve CSV İndirme Alanı */
 #sayac-container {
   background: #e2ede7;
   padding: 10px 14px;
@@ -218,6 +217,16 @@ select:focus, input:focus {
 .btn-csv:hover {
   background: #092c22;
   color: #ffffff;
+}
+
+@media (max-width: 480px) {
+  #sayac-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .btn-csv {
+    width: 100%;
+  }
 }
 
 #map { flex: 1; width: 100%; min-height: 350px; }
@@ -347,10 +356,10 @@ iller.forEach((il, index) => {
 
 const map = L.map('map').setView([39, 35], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-const layer = L.layerGroup().addTo(map);
+const mapLayerGroup = L.layerGroup().addTo(map);
 
 let currentAbortController = null;
-let yuklenenVeriler = []; // CSV İndirme için global hafıza
+let yuklenenVeriler = [];
 
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -361,9 +370,14 @@ const OVERPASS_ENDPOINTS = [
 function switchTab(mode) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
-  layer.clearLayers();
+  mapLayerGroup.clearLayers();
   yuklenenVeriler = [];
   document.getElementById("btn-csv").style.display = "none";
+  document.getElementById("sayac").innerHTML = "Lütfen yukarıdaki seçeneklerden birini seçin.";
+
+  document.getElementById("il-isimsiz").value = "";
+  document.getElementById("il-tum").value = "";
+  document.getElementById("il-arama").value = "";
 
   if (currentAbortController) {
     currentAbortController.abort();
@@ -400,8 +414,8 @@ function konumlaCamileriBul() {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
-      layer.clearLayers();
-      L.marker([lat, lon]).addTo(layer).bindPopup("<b>📍 Buradasınız</b>").openPopup();
+      mapLayerGroup.clearLayers();
+      L.marker([lat, lon]).addTo(mapLayerGroup).bindPopup("<b>📍 Buradasınız</b>").openPopup();
       map.setView([lat, lon], 14);
 
       const query = `[out:json][timeout:25];
@@ -427,9 +441,13 @@ function isimsizCamileriGetir(il) {
   const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"="${il}"]->.a;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-    relation["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    node["amenity"="place_of_worship"]["religion"="muslim"][!"name"](area.a);
+    way["amenity"="place_of_worship"]["religion"="muslim"][!"name"](area.a);
+    relation["amenity"="place_of_worship"]["religion"="muslim"][!"name"](area.a);
+
+    node["amenity"="place_of_worship"]["religion"="muslim"]["name"="Cami"](area.a);
+    way["amenity"="place_of_worship"]["religion"="muslim"]["name"="Cami"](area.a);
+    relation["amenity"="place_of_worship"]["religion"="muslim"]["name"="Cami"](area.a);
   );
   out center qt;`;
 
@@ -486,7 +504,7 @@ function camiAra() {
 }
 
 async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
-  if (temizle) layer.clearLayers();
+  if (temizle) mapLayerGroup.clearLayers();
   const sayac = document.getElementById("sayac");
   const btnCsv = document.getElementById("btn-csv");
   sayac.innerHTML = `⏳ Veriler yükleniyor, lütfen bekleyin...`;
@@ -559,7 +577,7 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet gösteriliyor.`;
   btnCsv.style.display = "inline-block";
 
-  yuklenenVeriler = []; // CSV için verileri derle
+  yuklenenVeriler = [];
   const bounds = [];
 
   uniqueElements.forEach(el => {
@@ -601,7 +619,7 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
       weight: 1.5,
       fillColor: noktaRengi,
       fillOpacity: 0.9
-    }).addTo(layer).bindPopup(popup);
+    }).addTo(mapLayerGroup).bindPopup(popup);
   });
 
   if (bounds.length > 0 && temizle) {
@@ -609,14 +627,13 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   }
 }
 
-// CSV İndirme Fonksiyonu
 function csvIndir() {
   if (yuklenenVeriler.length === 0) {
     alert("İndirilecek veri bulunamadı.");
     return;
   }
 
-  let csvContent = "\uFEFF"; // UTF-8 BOM ekleyerek Türkçe karakter problemini çözer
+  let csvContent = "\uFEFF";
   csvContent += "Cami Adı;Enlem;Boylam;OSM Tipi;OSM ID;OSM Linki\n";
 
   yuklenenVeriler.forEach(row => {
