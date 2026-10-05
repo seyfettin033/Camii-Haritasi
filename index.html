@@ -296,11 +296,11 @@ const layer = L.layerGroup().addTo(map);
 
 let currentAbortController = null;
 
-// Overpass Yedek Sunucuları (Mirror Endpoints)
+// Overpass Sunucu Sağlayıcıları
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
-  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
-  "https://overpass.k3s.ro/api/interpreter"
+  "https://overpass.k3s.ro/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
 ];
 
 function switchTab(mode) {
@@ -353,12 +353,10 @@ function konumlaCamileriBul() {
       L.marker([lat, lon]).addTo(layer).bindPopup("<b>📍 Buradasınız</b>").openPopup();
       map.setView([lat, lon], 14);
 
-      // Optimize edilmiş yakındakiler sorgusu
       const query = `[out:json][timeout:30];
       (
-        node["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        way["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        relation["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
+        nwr["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
+        nwr["building"="mosque"](around:5000, ${lat}, ${lon});
       );
       out center;`;
 
@@ -372,33 +370,30 @@ function konumlaCamileriBul() {
   );
 }
 
-// ⚠️ İSİMSİZ CAMİLER (Hızlı İl Arama)
+// ⚠️ İSİMSİZ CAMİLER
 function isimsizCamileriGetir(il) {
   if (!il) return;
 
-  const query = `[out:json][timeout:90];
-  area["ISO3166-2"~"^TR"]["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  const query = `[out:json][timeout:180][maxsize:1073741824];
+  area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
-    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
-    relation["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.searchArea);
+    nwr["building"="mosque"](!"name")(area.searchArea);
   );
   out center;`;
 
   overpassSorgula(query, `${il} ilindeki isimsiz camiler`, "#a83232");
 }
 
-// 🕌 TÜM CAMİLER (Hızlı ve Tam İl Arama)
+// 🕌 TÜM CAMİLER (Konya ve Büyük İller İçin Düzeltilmiş Sorgu)
 function tumCamileriGetir(il) {
   if (!il) return;
 
-  // ISO3166-2 ve admin_level optimize edilerek hızlı il sınır alanı bulma
-  const query = `[out:json][timeout:120];
-  area["ISO3166-2"~"^TR"]["admin_level"="4"]["name"~"${il}",i]->.searchArea;
+  const query = `[out:json][timeout:180][maxsize:1073741824];
+  area["admin_level"="4"]["name"~"^${il}"]->.searchArea;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
-    way["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
-    relation["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+    nwr["amenity"="place_of_worship"]["religion"="muslim"](area.searchArea);
+    nwr["building"="mosque"](area.searchArea);
   );
   out center;`;
 
@@ -416,31 +411,29 @@ function camiAra() {
   let baslik = "";
 
   if (seciliIl) {
-    query = `[out:json][timeout:90];
-    area["ISO3166-2"~"^TR"]["admin_level"="4"]["name"~"${seciliIl}",i]->.searchArea;
+    query = `[out:json][timeout:180][maxsize:1073741824];
+    area["admin_level"="4"]["name"~"^${seciliIl}"]->.searchArea;
     (
-      node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
-      way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
-      relation["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.searchArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.searchArea);
     );
     out center;`;
     baslik = `${seciliIl} - "${isim}" araması`;
   } else {
-    query = `[out:json][timeout:120];
-    area["ISO3166-2"="TR-34"]->.trArea;
+    query = `[out:json][timeout:180][maxsize:1073741824];
+    area["admin_level"="2"]["name"="Türkiye"]->.trArea;
     (
-      node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i];
-      way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i];
-      relation["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i];
+      nwr["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.trArea);
+      nwr["building"="mosque"]["name"~"${isim}",i](area.trArea);
     );
-    out center 3000;`;
+    out center;`;
     baslik = `Türkiye geneli - "${isim}" araması`;
   }
 
   overpassSorgula(query, baslik, "#0d3b2e");
 }
 
-// Sunuculardan sırayla veri çeken yedekli (Fallback) sorgu mekanizması
+// Sunuculardan sırayla veri çeken yedekli sorgu mekanizması
 async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   if (temizle) layer.clearLayers();
   const sayac = document.getElementById("sayac");
@@ -457,7 +450,7 @@ async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
     const endpoint = OVERPASS_ENDPOINTS[i];
     try {
       if (i > 0) {
-        sayac.innerHTML = `⚠️ Ana sunucu meşguldü, yedek sunucuya geçiliyor (${i + 1}/${OVERPASS_ENDPOINTS.length})...`;
+        sayac.innerHTML = `⚠️ Sunucu meşguldü, alternatif sunucuya geçiliyor (${i + 1}/${OVERPASS_ENDPOINTS.length})...`;
       }
 
       const response = await fetch(endpoint, {
@@ -480,7 +473,7 @@ async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   }
 
   if (!success) {
-    sayac.innerHTML = `❌ Sunucular şu anda çok yoğun. Lütfen 10-15 saniye sonra tekrar deneyin.`;
+    sayac.innerHTML = `❌ Sunucular şu anda çok yoğun. Lütfen birkaç saniye sonra tekrar deneyin.`;
   }
 }
 
