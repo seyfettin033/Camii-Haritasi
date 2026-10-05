@@ -1,162 +1,106 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Türkiye Camii Rehberi & Veri Katkı Haritası</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Türkiye Camii Rehberi</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+    header { background: #092c22; color: #fff; padding: 10px; text-align: center; }
+    .tabs { display: flex; background: #15513f; }
+    .tab-btn { flex: 1; padding: 10px; color: #fff; border: none; background: transparent; cursor: pointer; }
+    .tab-btn.active { background: #d4af37; color: #000; font-weight: bold; }
+    .filters { padding: 10px; background: #f4f7f5; }
+    .filter-group { display: none; }
+    .filter-group.active { display: block; }
+    select, input, button { width: 100%; padding: 10px; margin-top: 5px; font-size: 14px; }
+    #sayac { padding: 8px 10px; background: #e2ede7; font-weight: bold; font-size: 13px; }
+    #map { flex: 1; width: 100%; }
+  </style>
+</head>
+<body>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<header>
+  <h2 style="margin:0;">🕌 Türkiye Camii Rehberi</h2>
+</header>
 
-<style>
-* { box-sizing: border-box; }
-html, body { height:100%; margin:0; padding:0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: #f4f7f5;
-  color: #1a332a;
-  display: flex;
-  flex-direction: column;
-}
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
+</div>
 
-header {
-  background: linear-gradient(135deg, #092c22 0%, #0d3b2e 50%, #15513f 100%);
-  color: #f7f3e9;
-  padding: 18px 14px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(9, 44, 34, 0.4);
-  border-bottom: 2px solid #d4af37;
-  position: relative;
-}
-header h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  letter-spacing: 0.5px;
-  color: #f3e8c9;
-}
-.bayrak-img {
-  width: 28px;
-  height: auto;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-header small { 
-  color: #d4af37; 
-  opacity: 0.95;
-  font-size: 12px;
-  margin-top: 5px;
-  display: block;
-  font-weight: 400;
-  letter-spacing: 0.3px;
-}
+<div class="filters">
+  <div id="group-konum" class="filter-group active">
+    <button onclick="konumlaCamileriBul()">📍 Bulunduğum Konumdaki Camileri Göster</button>
+  </div>
 
-.btn-refresh-top {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid #d4af37;
-  color: #f3e8c9;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.btn-refresh-top:hover {
-  background: #d4af37;
-  color: #092c22;
-}
+  <div id="group-isimsiz" class="filter-group">
+    <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
+      <option value="">Lütfen İl Seçiniz</option>
+    </select>
+  </div>
 
-@media (max-width: 600px) {
-  header { padding-right: 80px; }
-  .btn-refresh-top { padding: 6px 8px; font-size: 11px; }
-}
+  <div id="group-tum" class="filter-group">
+    <select id="il-tum" onchange="tumCamileriGetir(this.value)">
+      <option value="">Lütfen İl Seçiniz</option>
+    </select>
+  </div>
+</div>
 
-.ayet-box {
-  background: #eaf1ed;
-  color: #0d3b2e;
-  text-align: center;
-  padding: 12px 14px;
-  border-bottom: 1px solid #c8dbc8;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.ayet-box strong {
-  color: #a38128;
-  display: block;
-  margin-bottom: 3px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.ayet-kaynak {
-  font-size: 11px;
-  color: #15513f;
-  font-weight: 600;
-  margin-top: 4px;
-  display: block;
-}
+<div id="sayac">Lütfen bir işlem seçin.</div>
+<div id="map"></div>
 
-.tabs {
-  display: flex;
-  background: #092c22;
-  border-bottom: 2px solid #d4af37;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.tab-btn {
-  flex: 0 0 auto;
-  min-width: 120px;
-  padding: 13px 12px;
-  border: none;
-  background: transparent;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  color: #b5c7c0;
-  white-space: nowrap;
-  transition: all 0.25s ease;
-}
-.tab-btn:hover {
-  color: #f3e8c9;
-  background: rgba(212, 175, 55, 0.1);
-}
-.tab-btn.active {
-  background: #f4f7f5;
-  color: #0d3b2e;
-  border-top: 3px solid #d4af37;
-  font-weight: 700;
-}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const iller = [
+    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+    "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+    "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+    "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+    "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+    "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+    "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+    "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+  ];
 
-.filters {
-  padding: 14px;
-  background: #f4f7f5;
-  border-bottom: 1px solid #d5e2da;
-}
-.filter-group { display: none; }
-.filter-group.active { display: block; }
+  const sel1 = document.getElementById("il-isimsiz");
+  const sel2 = document.getElementById("il-tum");
+  iller.forEach(il => {
+    sel1.add(new Option(il, il));
+    sel2.add(new Option(il, il));
+  });
 
-select, input {
-  width: 100%;
-  padding: 11px 13px;
-  border-radius: 8px;
-  border: 1.5px solid #b3cac0;
-  background: #ffffff;
-  color: #0d3b2e;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.2s;
-}
-select:focus, input:focus { 
-  border-color: #d4af37; 
-  box
+  const map = L.map('map').setView([39, 35], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  const layerGroup = L.layerGroup().addTo(map);
+
+  function switchTab(mode) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-group').forEach(g => g.classList.remove('active'));
+    layerGroup.clearLayers();
+    document.getElementById('sayac').innerText = "Lütfen bir il seçin veya konumunuzu açın.";
+
+    if (mode === 'konum') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('group-konum').classList.add('active');
+    } else if (mode === 'isimsiz') {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('group-isimsiz').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[2].classList.add('active');
+      document.getElementById('group-tum').classList.add('active');
+    }
+  } 
+
+  function konumlaCamileriBul() {
+    if (!navigator.geolocation) return alert("Konum desteklenmiyor.");
+    document.getElementById('sayac').innerText = "📡 Konum tespiti yapılıyor...";
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      map.setView([lat, lon], 14);
+      L.marker([lat, lon]).addTo(layerGroup).bindPopup("Buradasınız").openPopup();
+      const q = `[out:json][timeout:25];(node["amenity"="place_of_worship"]["religion"="muslim"](around:5000,${lat},${lon});way
