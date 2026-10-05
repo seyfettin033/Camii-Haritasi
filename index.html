@@ -38,12 +38,6 @@ header h1 {
   letter-spacing: 0.5px;
   color: #f3e8c9;
 }
-.bayrak-img {
-  width: 28px;
-  height: auto;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
 header small { 
   color: #d4af37; 
   opacity: 0.95;
@@ -68,18 +62,10 @@ header small {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 .btn-refresh-top:hover {
   background: #d4af37;
   color: #092c22;
-}
-
-@media (max-width: 600px) {
-  header { padding-right: 80px; }
-  .btn-refresh-top { padding: 6px 8px; font-size: 11px; }
 }
 
 .ayet-box {
@@ -99,13 +85,6 @@ header small {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.ayet-kaynak {
-  font-size: 11px;
-  color: #15513f;
-  font-weight: 600;
-  margin-top: 4px;
-  display: block;
-}
 
 .tabs {
   display: flex;
@@ -119,5 +98,212 @@ header small {
   padding: 13px 10px;
   border: none;
   background: transparent;
-  
- 
+  color: #a3c2b5;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.tab-btn.active {
+  color: #d4af37;
+  border-bottom: 3px solid #d4af37;
+  background: rgba(255,255,255,0.05);
+}
+
+.main-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content {
+  display: none;
+  height: 100%;
+  width: 100%;
+}
+.tab-content.active {
+  display: block;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.form-container {
+  padding: 20px;
+  max-width: 600px;
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.btn-submit {
+  background: #0d3b2e;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+}
+.btn-submit:hover {
+  background: #15513f;
+}
+
+@media (max-width: 600px) {
+  header { padding-right: 80px; }
+  .btn-refresh-top { padding: 6px 8px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🕌 Türkiye Camii Rehberi</h1>
+  <small>Topluluk Destekli Veri Katkı Haritası</small>
+  <button class="btn-refresh-top" onclick="location.reload()">🔄 Yenile</button>
+</header>
+
+<div class="ayet-box">
+  <strong>Günün Ayeti</strong>
+  "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."
+  <span class="ayet-kaynak">(Tevbe Suresi, 18)</span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('map-tab')">🗺️ Harita</button>
+  <button class="tab-btn" onclick="switchTab('add-tab')">➕ Cami Ekle</button>
+</div>
+
+<div class="main-content">
+  <!-- Harita Sekmesi -->
+  <div id="map-tab" class="tab-content active">
+    <div id="map"></div>
+  </div>
+
+  <!-- Cami Ekleme Sekmesi -->
+  <div id="add-tab" class="tab-content">
+    <div class="form-container">
+      <h3>Yeni Cami Bilgisi Ekle</h3>
+      <form id="camiiForm" onsubmit="addCamii(event)">
+        <div class="form-group">
+          <label for="camiiAdi">Cami Adı:</label>
+          <input type="text" id="camiiAdi" required placeholder="Örn: Sultanahmet Camii">
+        </div>
+        <div class="form-group">
+          <label for="sehir">Şehir:</label>
+          <input type="text" id="sehir" required placeholder="Örn: İstanbul">
+        </div>
+        <div class="form-group">
+          <label for="lat">Enlem (Latitude):</label>
+          <input type="number" step="any" id="lat" required placeholder="Örn: 41.0054">
+        </div>
+        <div class="form-group">
+          <label for="lng">Boylam (Longitude):</label>
+          <input type="number" step="any" id="lng" required placeholder="Örn: 28.9768">
+        </div>
+        <div class="form-group">
+          <label for="aciklama">Açıklama / Notlar:</label>
+          <textarea id="aciklama" rows="3" placeholder="Tarihi bilgileri, abdesthane durumu vb."></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Katkıda Bulun / Kaydet</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  let map;
+  const initialCamiler = [
+    { name: "Sultanahmet Camii", city: "İstanbul", lat: 41.0054, lng: 28.9768, desc: "1616 yılında ibadete açılmış tarihi cami." },
+    { name: "Kocatepe Camii", city: "Ankara", lat: 39.9167, lng: 32.8606, desc: "Ankara'nın en büyük camilerinden biridir." },
+    { name: "Ulu Cami", city: "Bursa", lat: 40.1833, lng: 29.0625, desc: "I. Bayezid tarafından yaptırılmış erken dönem Osmanlı eseri." }
+  ];
+
+  function initMap() {
+    // Haritayı Türkiye merkezli başlat
+    map = L.map('map').setView([39.0000, 35.0000], 6);
+
+    // OpenStreetMap katmanını yükle
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap katkıda bulunanlar'
+    }).addTo(map);
+
+    // Başlangıç verilerini ekle
+    initialCamiler.forEach(camii => {
+      addMarker(camii.lat, camii.lng, camii.name, camii.city, camii.desc);
+    });
+  }
+
+  function addMarker(lat, lng, name, city, desc) {
+    const marker = L.marker([lat, lng]).addTo(map);
+    marker.bindPopup(`
+      <strong>${name}</strong> (${city})<br>
+      <p style="margin: 5px 0 0 0; font-size:12px;">${desc || 'Açıklama bulunmuyor.'}</p>
+    `);
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    // Harita sekmesine geçildiğinde boyutlandırma hatasını düzelt
+    if (tabId === 'map-tab' && map) {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
+  }
+
+  function addCamii(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('camiiAdi').value;
+    const city = document.getElementById('sehir').value;
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lng = parseFloat(document.getElementById('lng').value);
+    const desc = document.getElementById('aciklama').value;
+
+    addMarker(lat, lng, name, city, desc);
+    
+    // Harita sekmesine geç ve yeni noktaya odaklan
+    document.querySelectorAll('.tab-btn')[0].click();
+    map.setView([lat, lng], 14);
+
+    // Formu temizle
+    document.getElementById('camiiForm').reset();
+  }
+
+  // Sayfa yüklendiğinde haritayı çalıştır
+  window.onload = initMap;
+</script>
+
+</body>
+</html>
