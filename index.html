@@ -222,14 +222,16 @@ select:focus, input:focus {
 
 #map { flex: 1; width: 100%; min-height: 350px; }
 
-/* Atıf metnini sol tarafa sabitleme */
-.leaflet-left .leaflet-control-attribution {
-  left: 0;
-  right: auto;
-  float: left;
-  background: rgba(255, 255, 255, 0.9);
-  margin: 0 0 5px 5px;
-  padding: 3px 8px;
+/* Atıf metnini sol tarafa sabitleyen CSS kuralı */
+.leaflet-bottom.leaflet-right {
+  display: none; /* Varsayılan sağ alt köşeyi gizler */
+}
+.leaflet-bottom.leaflet-left {
+  display: block; /* Sol alt köşeyi aktif eder */
+}
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.9) !important;
+  padding: 3px 8px !important;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
@@ -273,24 +275,4 @@ select:focus, input:focus {
   <span id="ayet-sure" class="ayet-kaynak">(Tevbe Suresi, 18. Ayet)</span>
 </div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
-  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
-  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
-</div>
-
-<div class="filters">
-  <div id="group-konum" class="filter-group active">
-    <button class="btn-location" onclick="konumlaCamileriBul()">
-      📍 Bulunduğum Konuma Göre Yakındaki Camileri Göster
-    </button>
-  </div>
-
-  <div id="group-isimsiz" class="filter-group">
-    <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
-      <option value="">Lütfen il seçiniz</option>
-    </select>
-  </div>
-
-  <div id="group-tum" class="filter-group
+<div class
