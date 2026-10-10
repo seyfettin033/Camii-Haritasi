@@ -26,7 +26,6 @@ header {
   box-shadow: 0 4px 15px rgba(9, 44, 34, 0.4);
   border-bottom: 2px solid #d4af37;
   position: relative;
-  flex-shrink: 0;
 }
 header h1 {
   margin: 0;
@@ -92,7 +91,6 @@ header small {
   border-bottom: 1px solid #c8dbc8;
   font-size: 13px;
   line-height: 1.5;
-  flex-shrink: 0;
 }
 .ayet-box strong {
   color: #a38128;
@@ -115,7 +113,6 @@ header small {
   background: #092c22;
   border-bottom: 2px solid #d4af37;
   overflow-x: auto;
-  flex-shrink: 0;
 }
 .tab-btn {
   flex: 1;
@@ -145,7 +142,6 @@ header small {
   padding: 14px;
   background: #f4f7f5;
   border-bottom: 1px solid #d5e2da;
-  flex-shrink: 0;
 }
 .filter-group { display: none; }
 .filter-group.active { display: block; }
@@ -171,4 +167,92 @@ select:focus, input:focus {
   flex-direction: column;
   gap: 10px;
 }
-.search-box { display: flex; gap: 8px
+.search-box { display: flex; gap: 8px; }
+.search-box input { flex: 1; }
+
+.btn-action, .btn-location {
+  padding: 12px;
+  background: linear-gradient(135deg, #0d3b2e 0%, #15513f 100%);
+  color: #f3e8c9;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(13, 59, 46, 0.25);
+}
+.btn-action:hover, .btn-location:hover { 
+  background: linear-gradient(135deg, #092c22 0%, #0d3b2e 100%);
+  color: #ffffff;
+}
+
+/* Sayac ve CSV İndirme Alanı */
+#sayac-container {
+  background: #e2ede7;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #c8dbc8;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#sayac {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0d3b2e;
+}
+.btn-csv {
+  background: #15513f;
+  color: #f3e8c9;
+  border: 1px solid #d4af37;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: none;
+  transition: all 0.2s;
+}
+.btn-csv:hover {
+  background: #092c22;
+  color: #ffffff;
+}
+
+/* Harita ve Telif Alanı */
+.map-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#map { 
+  flex: 1; 
+  width: 100%; 
+  min-height: 350px; 
+}
+
+.osm-attribution {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #333;
+  border-radius: 4px;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  pointer-events: auto;
+}
+.osm-attribution a {
+  color: #0d3b2e;
+  text-decoration: none;
+  font-weight: 600;
+}
+.osm-attribution a:hover {
+  text-decoration: underline;
+}
+
+.popup { font-size: 13px
