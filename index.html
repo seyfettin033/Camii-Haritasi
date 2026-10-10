@@ -220,7 +220,36 @@ select:focus, input:focus {
   color: #ffffff;
 }
 
+/* Harita Alanı ve OSM Atıf Konteyneri */
+.map-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 #map { flex: 1; width: 100%; min-height: 350px; }
+
+.osm-attribution {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 3px 8px;
+  font-size: 11px;
+  color: #333;
+  border-radius: 4px;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  pointer-events: auto;
+}
+.osm-attribution a {
+  color: #0d3b2e;
+  text-decoration: none;
+  font-weight: 600;
+}
+.osm-attribution a:hover {
+  text-decoration: underline;
+}
 
 .popup { font-size: 13px; text-align: center; padding: 2px; }
 .popup b { color: #0d3b2e; display: block; margin-bottom: 2px; font-size: 14px; }
@@ -305,7 +334,12 @@ select:focus, input:focus {
   <button id="btn-csv" class="btn-csv" onclick="csvIndir()">📥 CSV İndir</button>
 </div>
 
-<div id="map"></div>
+<div class="map-wrap">
+  <div id="map"></div>
+  <div class="osm-attribution">
+    Veriler <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> katkıcıları içindir.
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -318,322 +352,4 @@ const ayetler = [
 
 function ayetGetir() {
   const r = ayetler[Math.floor(Math.random() * ayetler.length)];
-  document.getElementById("ayet-metin").innerText = `"${r.metin}"`;
-  document.getElementById("ayet-sure").innerText = r.sure;
-}
-ayetGetir();
-
-const iller = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
-  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
-  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
-  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
-  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
-  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
-  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
-];
-
-const ilSelectIsimsiz = document.getElementById("il-isimsiz");
-const ilSelectTum = document.getElementById("il-tum");
-const ilSelectArama = document.getElementById("il-arama");
-
-iller.forEach((il, index) => {
-  const plaka = (index + 1).toString().padStart(2, '0');
-  ilSelectIsimsiz.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectTum.add(new Option(`${plaka} - ${il}`, il));
-  ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
-});
-
-const map = L.map('map').setView([39, 35], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-const layer = L.layerGroup().addTo(map);
-
-let currentAbortController = null;
-let yuklenenVeriler = []; // CSV İndirme için global hafıza
-
-const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://lz4.overpass-api.de/api/interpreter",
-  "https://z.overpass-api.de/api/interpreter"
-];
-
-function switchTab(mode) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
-  layer.clearLayers();
-  yuklenenVeriler = [];
-  document.getElementById("btn-csv").style.display = "none";
-
-  if (currentAbortController) {
-    currentAbortController.abort();
-  }
-
-  if (mode === 'konum') {
-    document.querySelectorAll('.tab-btn')[0].classList.add('active');
-    document.getElementById('group-konum').classList.add('active');
-  } else if (mode === 'isimsiz') {
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    document.getElementById('group-isimsiz').classList.add('active');
-  } else if (mode === 'tum') {
-    document.querySelectorAll('.tab-btn')[2].classList.add('active');
-    document.getElementById('group-tum').classList.add('active');
-  } else {
-    document.querySelectorAll('.tab-btn')[3].classList.add('active');
-    document.getElementById('group-arama').classList.add('active');
-  }
-}
-
-function konumlaCamileriBul() {
-  const sayac = document.getElementById("sayac");
-
-  if (!navigator.geolocation) {
-    alert("Tarayıcınız konum özelliğini desteklemiyor.");
-    return;
-  }
-
-  sayac.innerHTML = "📡 Konumunuz tespit ediliyor...";
-  document.getElementById("btn-csv").style.display = "none";
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      layer.clearLayers();
-      L.marker([lat, lon]).addTo(layer).bindPopup("<b>📍 Buradasınız</b>").openPopup();
-      map.setView([lat, lon], 14);
-
-      const query = `[out:json][timeout:25];
-      (
-        node["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        way["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-        relation["amenity"="place_of_worship"]["religion"="muslim"](around:5000, ${lat}, ${lon});
-      );
-      out center qt;`;
-
-      overpassSorgula(query, "Yakınınızdaki camiler (5 km)", "#0d3b2e", false);
-    },
-    () => {
-      sayac.innerHTML = "❌ Konum izni verilmedi veya alınamadı.";
-    },
-    { timeout: 10000, enableHighAccuracy: true }
-  );
-}
-
-function isimsizCamileriGetir(il) {
-  if (!il) return;
-
-  const query = `[out:json][timeout:90];
-  area["admin_level"="4"]["name"="${il}"]->.a;
-  (
-    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-    relation["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
-  );
-  out center qt;`;
-
-  overpassSorgula(query, `${il} - İsimsiz Camiler`, "#a83232");
-}
-
-function tumCamileriGetir(il) {
-  if (!il) return;
-
-  const query = `[out:json][timeout:90];
-  area["admin_level"="4"]["name"="${il}"]->.a;
-  (
-    node["amenity"="place_of_worship"]["religion"="muslim"](area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"](area.a);
-    relation["amenity"="place_of_worship"]["religion"="muslim"](area.a);
-  );
-  out center qt;`;
-
-  overpassSorgula(query, `${il} - Tüm Camiler`, "#0d3b2e");
-}
-
-function camiAra() {
-  const isim = document.getElementById("cami-ismi").value.trim();
-  const seciliIl = document.getElementById("il-arama").value;
-
-  if (!isim) return alert("Lütfen aramak istediğiniz kelimeyi girin.");
-
-  let query = "";
-  let baslik = "";
-
-  if (seciliIl) {
-    query = `[out:json][timeout:90];
-    area["admin_level"="4"]["name"="${seciliIl}"]->.a;
-    (
-      node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-      way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-      relation["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-    );
-    out center qt;`;
-    baslik = `${seciliIl} - "${isim}" araması`;
-  } else {
-    query = `[out:json][timeout:90];
-    area["admin_level"="2"]["name"="Türkiye"]->.a;
-    (
-      node["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-      way["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-      relation["amenity"="place_of_worship"]["religion"="muslim"]["name"~"${isim}",i](area.a);
-    );
-    out center qt;`;
-    baslik = `Türkiye - "${isim}" araması`;
-  }
-
-  overpassSorgula(query, baslik, "#0d3b2e");
-}
-
-async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
-  if (temizle) layer.clearLayers();
-  const sayac = document.getElementById("sayac");
-  const btnCsv = document.getElementById("btn-csv");
-  sayac.innerHTML = `⏳ Veriler yükleniyor, lütfen bekleyin...`;
-  btnCsv.style.display = "none";
-
-  if (currentAbortController) {
-    currentAbortController.abort();
-  }
-  currentAbortController = new AbortController();
-
-  let success = false;
-
-  for (let i = 0; i < OVERPASS_ENDPOINTS.length; i++) {
-    const endpoint = OVERPASS_ENDPOINTS[i];
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "data=" + encodeURIComponent(query),
-        signal: currentAbortController.signal
-      });
-
-      if (!response.ok) throw new Error(`HTTP: ${response.status}`);
-
-      const data = await response.json();
-      verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle);
-      success = true;
-      break; 
-
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      console.warn(`Alternatif deneniyor: ${endpoint}`, err);
-    }
-  }
-
-  if (!success) {
-    sayac.innerHTML = `❌ Sunucu zaman aşımına uğradı. Sayfayı yenileyip tekrar deneyin.`;
-  }
-}
-
-function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
-  const sayac = document.getElementById("sayac");
-  const btnCsv = document.getElementById("btn-csv");
-  
-  if (!data || !data.elements) {
-    sayac.innerHTML = `❌ Veri yanıtı alınamadı.`;
-    return;
-  }
-
-  const uniqueElements = [];
-  const seenIds = new Set();
-
-  data.elements.forEach(el => {
-    const key = `${el.type}/${el.id}`;
-    if (!seenIds.has(key)) {
-      seenIds.add(key);
-      uniqueElements.push(el);
-    }
-  });
-
-  const adet = uniqueElements.length;
-
-  if (adet === 0) {
-    sayac.innerHTML = `❌ ${baslikMetni} için kayıt bulunamadı.`;
-    return;
-  }
-
-  sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet gösteriliyor.`;
-  btnCsv.style.display = "inline-block";
-
-  yuklenenVeriler = []; // CSV için verileri derle
-  const bounds = [];
-
-  uniqueElements.forEach(el => {
-    const lat = el.lat || (el.center && el.center.lat);
-    const lon = el.lon || (el.center && el.center.lon);
-    
-    if (!lat || !lon) return;
-
-    const camiAdi = (el.tags && el.tags.name) ? el.tags.name : "İsimsiz Cami";
-    
-    yuklenenVeriler.push({
-      adi: camiAdi,
-      lat: lat,
-      lon: lon,
-      type: el.type,
-      id: el.id,
-      link: `https://www.openstreetmap.org/${el.type}/${el.id}`
-    });
-
-    bounds.push([lat, lon]);
-
-    const popup = `
-    <div class="popup">
-      <b>${camiAdi}</b>
-      <small>ID: ${el.type}/${el.id}</small>
-      <div class="popup-links">
-        <a class="google" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
-        <a class="diyanet" target="_blank" rel="noopener noreferrer" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
-        <a class="mapillary" target="_blank" rel="noopener noreferrer" href="https://www.mapillary.com/app/?lat=${lat}&lng=${lon}&z=18">📸 Mapillary</a>
-        <a class="panoramax" target="_blank" rel="noopener noreferrer" href="https://panoramax.openstreetmap.fr/#focus=map&map=18/${lat}/${lon}">📷 Panoramax</a>
-        <a class="osm" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/edit?${el.type}=${el.id}">✍️ OSM'de Düzenle</a>
-        <a class="osm-note" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}">🚨 Not Ekle</a>
-      </div>
-    </div>`;
-
-    L.circleMarker([lat, lon], {
-      radius: 6,
-      color: "#d4af37",
-      weight: 1.5,
-      fillColor: noktaRengi,
-      fillOpacity: 0.9
-    }).addTo(layer).bindPopup(popup);
-  });
-
-  if (bounds.length > 0 && temizle) {
-    map.fitBounds(bounds, { padding: [30, 30] });
-  }
-}
-
-// CSV İndirme Fonksiyonu
-function csvIndir() {
-  if (yuklenenVeriler.length === 0) {
-    alert("İndirilecek veri bulunamadı.");
-    return;
-  }
-
-  let csvContent = "\uFEFF"; // UTF-8 BOM ekleyerek Türkçe karakter problemini çözer
-  csvContent += "Cami Adı;Enlem;Boylam;OSM Tipi;OSM ID;OSM Linki\n";
-
-  yuklenenVeriler.forEach(row => {
-    const temizAd = `"${row.adi.replace(/"/g, '""')}"`;
-    csvContent += `${temizAd};${row.lat};${row.lon};${row.type};${row.id};${row.link}\n`;
-  });
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `camiler_listesi_${new Date().toISOString().slice(0,10)}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-</script>
-
-</body>
-</html>
+  document.getElementById("ayet-met
