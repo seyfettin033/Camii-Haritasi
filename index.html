@@ -26,6 +26,7 @@ header {
   box-shadow: 0 4px 15px rgba(9, 44, 34, 0.4);
   border-bottom: 2px solid #d4af37;
   position: relative;
+  flex-shrink: 0;
 }
 header h1 {
   margin: 0;
@@ -91,6 +92,7 @@ header small {
   border-bottom: 1px solid #c8dbc8;
   font-size: 13px;
   line-height: 1.5;
+  flex-shrink: 0;
 }
 .ayet-box strong {
   color: #a38128;
@@ -113,6 +115,7 @@ header small {
   background: #092c22;
   border-bottom: 2px solid #d4af37;
   overflow-x: auto;
+  flex-shrink: 0;
 }
 .tab-btn {
   flex: 1;
@@ -142,6 +145,7 @@ header small {
   padding: 14px;
   background: #f4f7f5;
   border-bottom: 1px solid #d5e2da;
+  flex-shrink: 0;
 }
 .filter-group { display: none; }
 .filter-group.active { display: block; }
@@ -167,189 +171,4 @@ select:focus, input:focus {
   flex-direction: column;
   gap: 10px;
 }
-.search-box { display: flex; gap: 8px; }
-.search-box input { flex: 1; }
-
-.btn-action, .btn-location {
-  padding: 12px;
-  background: linear-gradient(135deg, #0d3b2e 0%, #15513f 100%);
-  color: #f3e8c9;
-  border: 1px solid #d4af37;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(13, 59, 46, 0.25);
-}
-.btn-action:hover, .btn-location:hover { 
-  background: linear-gradient(135deg, #092c22 0%, #0d3b2e 100%);
-  color: #ffffff;
-}
-
-/* Sayac ve CSV İndirme Alanı */
-#sayac-container {
-  background: #e2ede7;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #c8dbc8;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-#sayac {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #0d3b2e;
-}
-.btn-csv {
-  background: #15513f;
-  color: #f3e8c9;
-  border: 1px solid #d4af37;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: none;
-  transition: all 0.2s;
-}
-.btn-csv:hover {
-  background: #092c22;
-  color: #ffffff;
-}
-
-/* Harita Alanı ve OSM Atıf Konteyneri */
-.map-wrap {
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-#map { flex: 1; width: 100%; min-height: 350px; }
-
-.osm-attribution {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 3px 8px;
-  font-size: 11px;
-  color: #333;
-  border-radius: 4px;
-  z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  pointer-events: auto;
-}
-.osm-attribution a {
-  color: #0d3b2e;
-  text-decoration: none;
-  font-weight: 600;
-}
-.osm-attribution a:hover {
-  text-decoration: underline;
-}
-
-.popup { font-size: 13px; text-align: center; padding: 2px; }
-.popup b { color: #0d3b2e; display: block; margin-bottom: 2px; font-size: 14px; }
-.popup small { color: #527568; display: block; margin-bottom: 10px; }
-.popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-.popup a {
-  display: block; text-align: center; padding: 8px 4px; border-radius: 6px;
-  text-decoration: none; font-weight: 600; font-size: 11px;
-  transition: opacity 0.2s;
-}
-.popup a:hover { opacity: 0.9; }
-
-.osm { background: #0d3b2e; color: #f3e8c9; grid-column: span 2; border: 1px solid #d4af37; }
-.google { background: #d9a74a; color: #fff; }
-.diyanet { background: #a83232; color: #fff; }
-.mapillary { background: #2d7a58; color: #fff; }
-.panoramax { background: #5a4b82; color: #fff; }
-.osm-note { background: #8c2525; color: #fff; grid-column: span 2; }
-</style>
-</head>
-
-<body>
-
-<header>
-  <h1>
-    <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
-    Türkiye Camii Rehberi
-  </h1>
-  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
-  <button class="btn-refresh-top" onclick="window.location.reload()" title="Sayfayı Yenile">
-    🔄 Yenile
-  </button>
-</header>
-
-<div class="ayet-box">
-  <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
-  <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."</span>
-  <span id="ayet-sure" class="ayet-kaynak">(Tevbe Suresi, 18. Ayet)</span>
-</div>
-
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
-  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
-  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
-</div>
-
-<div class="filters">
-  <div id="group-konum" class="filter-group active">
-    <button class="btn-location" onclick="konumlaCamileriBul()">
-      📍 Bulunduğum Konuma Göre Yakındaki Camileri Göster
-    </button>
-  </div>
-
-  <div id="group-isimsiz" class="filter-group">
-    <select id="il-isimsiz" onchange="isimsizCamileriGetir(this.value)">
-      <option value="">Lütfen il seçiniz</option>
-    </select>
-  </div>
-
-  <div id="group-tum" class="filter-group">
-    <select id="il-tum" onchange="tumCamileriGetir(this.value)">
-      <option value="">Lütfen il seçiniz</option>
-    </select>
-  </div>
-
-  <div id="group-arama" class="filter-group">
-    <div class="search-box-group">
-      <select id="il-arama">
-        <option value="">Tüm Türkiye Geneli</option>
-      </select>
-      <div class="search-box">
-        <input type="text" id="cami-ismi" placeholder="Cami adı girin (Örn: Süleymaniye)" onkeyup="if(event.key==='Enter') camiAra()">
-        <button class="btn-action" style="width:auto;" onclick="camiAra()">Ara</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="sayac-container">
-  <div id="sayac">Lütfen yukarıdaki seçeneklerden birini seçin.</div>
-  <button id="btn-csv" class="btn-csv" onclick="csvIndir()">📥 CSV İndir</button>
-</div>
-
-<div class="map-wrap">
-  <div id="map"></div>
-  <div class="osm-attribution">
-    Veriler <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> katkıcıları içindir.
-  </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-const ayetler = [
-  { metin: "Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder.", sure: "(Tevbe Suresi, 18. Ayet)" },
-  { metin: "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar.", sure: "(Ankebût Suresi, 45. Ayet)" },
-  { metin: "Bilin ki, kalpler ancak Allah’ı anmakla huzur bulur.", sure: "(Râd Suresi, 28. Ayet)" }
-];
-
-function ayetGetir() {
-  const r = ayetler[Math.floor(Math.random() * ayetler.length)];
-  document.getElementById("ayet-met
+.search-box { display: flex; gap: 8px
