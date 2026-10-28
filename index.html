@@ -54,6 +54,7 @@ header small {
   letter-spacing: 0.3px;
 }
 
+/* En üstteki Yenile Butonu */
 .btn-refresh-top {
   position: absolute;
   right: 14px;
@@ -186,6 +187,7 @@ select:focus, input:focus {
   color: #ffffff;
 }
 
+/* Sayac ve CSV İndirme Alanı */
 #sayac-container {
   background: #e2ede7;
   padding: 10px 14px;
@@ -218,24 +220,18 @@ select:focus, input:focus {
   color: #ffffff;
 }
 
-#map {
-  flex: 1;
-  width: 100%;
-  min-height: 400px;
-  height: calc(100vh - 280px);
-  background: #e5e3df;
-}
+#map { flex: 1; width: 100%; min-height: 350px; }
 
 .popup { font-size: 13px; text-align: center; padding: 2px; }
 .popup b { color: #0d3b2e; display: block; margin-bottom: 2px; font-size: 14px; }
 .popup small { color: #527568; display: block; margin-bottom: 10px; }
 .popup-links { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-.popup a, .btn-copy-popup {
+.popup a {
   display: block; text-align: center; padding: 8px 4px; border-radius: 6px;
   text-decoration: none; font-weight: 600; font-size: 11px;
-  transition: opacity 0.2s; cursor: pointer; border: none;
+  transition: opacity 0.2s;
 }
-.popup a:hover, .btn-copy-popup:hover { opacity: 0.9; }
+.popup a:hover { opacity: 0.9; }
 
 .osm { background: #0d3b2e; color: #f3e8c9; grid-column: span 2; border: 1px solid #d4af37; }
 .google { background: #d9a74a; color: #fff; }
@@ -243,7 +239,6 @@ select:focus, input:focus {
 .mapillary { background: #2d7a58; color: #fff; }
 .panoramax { background: #5a4b82; color: #fff; }
 .osm-note { background: #8c2525; color: #fff; grid-column: span 2; }
-.copy-coords { background: #4a5568; color: #fff; grid-column: span 2; }
 </style>
 </head>
 
@@ -254,12 +249,12 @@ select:focus, input:focus {
     <img src="https://flagcdn.com/w40/tr.png" alt="Türkiye Bayrağı" class="bayrak-img">
     Türkiye Camii Rehberi
   </h1>
-  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu. Kaynak: Openstreetmap</small>
+  <small>OpenStreetMap Veri İyileştirme & Görselleştirme Platformu</small>
   <button class="btn-refresh-top" onclick="window.location.reload()" title="Sayfayı Yenile">
     🔄 Yenile
   </button>
 </header>
-  
+
 <div class="ayet-box">
   <strong>📖 GÜNÜN AYET-İ KERİMESİ</strong>
   <span id="ayet-metin">"Allah'ın mescitlerini ancak Allah'a ve ahiret gününe inananlar imar eder..."</span>
@@ -267,10 +262,10 @@ select:focus, input:focus {
 </div>
 
 <div class="tabs">
-  <button id="tab-konum" class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
-  <button id="tab-isimsiz" class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
-  <button id="tab-tum" class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
-  <button id="tab-arama" class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
+  <button class="tab-btn active" onclick="switchTab('konum')">📍 Yakınımdakiler</button>
+  <button class="tab-btn" onclick="switchTab('isimsiz')">⚠️ İsimsiz Camiler</button>
+  <button class="tab-btn" onclick="switchTab('tum')">🕌 Tüm Camiler</button>
+  <button class="tab-btn" onclick="switchTab('arama')">🔍 Cami Ara</button>
 </div>
 
 <div class="filters">
@@ -331,8 +326,7 @@ ayetGetir();
 const iller = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
   "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
-  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari
-",
+  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
   "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
   "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
   "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
@@ -351,19 +345,12 @@ iller.forEach((il, index) => {
   ilSelectArama.add(new Option(`${plaka} - ${il}`, il));
 });
 
-// Harita Tanımlaması
 const map = L.map('map').setView([39, 35], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-  maxZoom: 19,
-  attribution: '© OpenStreetMap'
-}).addTo(map);
-
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 const layer = L.layerGroup().addTo(map);
 
-setTimeout(() => { map.invalidateSize(); }, 300);
-
 let currentAbortController = null;
-let yuklenenVeriler = [];
+let yuklenenVeriler = []; // CSV İndirme için global hafıza
 
 const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -374,7 +361,6 @@ const OVERPASS_ENDPOINTS = [
 function switchTab(mode) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.filter-group').forEach(grp => grp.classList.remove('active'));
-  
   layer.clearLayers();
   yuklenenVeriler = [];
   document.getElementById("btn-csv").style.display = "none";
@@ -383,14 +369,19 @@ function switchTab(mode) {
     currentAbortController.abort();
   }
 
-  // Güvenli ID bazlı sekme yönetimi
-  const targetBtn = document.getElementById('tab-' + mode);
-  const targetGroup = document.getElementById('group-' + mode);
-
-  if (targetBtn) targetBtn.classList.add('active');
-  if (targetGroup) targetGroup.classList.add('active');
-
-  setTimeout(() => { map.invalidateSize(); }, 100);
+  if (mode === 'konum') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('group-konum').classList.add('active');
+  } else if (mode === 'isimsiz') {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('group-isimsiz').classList.add('active');
+  } else if (mode === 'tum') {
+    document.querySelectorAll('.tab-btn')[2].classList.add('active');
+    document.getElementById('group-tum').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    document.getElementById('group-arama').classList.add('active');
+  }
 }
 
 function konumlaCamileriBul() {
@@ -436,9 +427,9 @@ function isimsizCamileriGetir(il) {
   const query = `[out:json][timeout:90];
   area["admin_level"="4"]["name"="${il}"]->.a;
   (
-    node["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);
-    way["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);
-    relation["amenity"="place_of_worship"]["religion"="muslim"]["name"!~"."](area.a);
+    node["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    way["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
+    relation["amenity"="place_of_worship"]["religion"="muslim"](!"name")(area.a);
   );
   out center qt;`;
 
@@ -538,13 +529,6 @@ async function overpassSorgula(query, baslikMetni, noktaRengi, temizle = true) {
   }
 }
 
-function copyCoords(btn, coords) {
-  navigator.clipboard.writeText(coords);
-  const oldText = btn.innerText;
-  btn.innerText = '✅ Koordinat Kopyalandı';
-  setTimeout(() => { btn.innerText = oldText; }, 2000);
-}
-
 function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   const sayac = document.getElementById("sayac");
   const btnCsv = document.getElementById("btn-csv");
@@ -575,7 +559,7 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   sayac.innerHTML = `📍 ${baslikMetni} – <b>${adet}</b> adet gösteriliyor.`;
   btnCsv.style.display = "inline-block";
 
-  yuklenenVeriler = [];
+  yuklenenVeriler = []; // CSV için verileri derle
   const bounds = [];
 
   uniqueElements.forEach(el => {
@@ -601,7 +585,6 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
     <div class="popup">
       <b>${camiAdi}</b>
       <small>ID: ${el.type}/${el.id}</small>
-      <button class="btn-copy-popup copy-coords" onclick="copyCoords(this, '${lat},${lon}')">📋 Koordinatı Kopyala</button>
       <div class="popup-links">
         <a class="google" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q=${lat},${lon}">🔍 Google</a>
         <a class="diyanet" target="_blank" rel="noopener noreferrer" href="https://camiler.diyanet.gov.tr">🕌 Diyanet</a>
@@ -626,13 +609,14 @@ function verileriHaritayaBas(data, baslikMetni, noktaRengi, temizle) {
   }
 }
 
+// CSV İndirme Fonksiyonu
 function csvIndir() {
   if (yuklenenVeriler.length === 0) {
     alert("İndirilecek veri bulunamadı.");
     return;
   }
 
-  let csvContent = "\uFEFF";
+  let csvContent = "\uFEFF"; // UTF-8 BOM ekleyerek Türkçe karakter problemini çözer
   csvContent += "Cami Adı;Enlem;Boylam;OSM Tipi;OSM ID;OSM Linki\n";
 
   yuklenenVeriler.forEach(row => {
